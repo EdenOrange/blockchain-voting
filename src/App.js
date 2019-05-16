@@ -1,5 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import {
+  Container,
+  Menu,
+} from 'semantic-ui-react';
 
 function Index() {
   return <h2>Home</h2>;
@@ -17,23 +21,19 @@ function AppRouter() {
   return (
     <Router>
       <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/about/">About</Link>
-            </li>
-            <li>
-              <Link to="/users/">Users</Link>
-            </li>
-          </ul>
-        </nav>
+        <Menu fixed='top' inverted>
+          <Container>
+            <Menu.Item as={Link} to='/'>Home</Menu.Item>
+            <Menu.Item as={Link} to='/about/'>About</Menu.Item>
+            <Menu.Item as={Link} to='/users/'>Users</Menu.Item>
+          </Container>
+        </Menu>
 
-        <Route path="/" exact component={Index} />
-        <Route path="/about/" component={About} />
-        <Route path="/users/" component={Users} />
+        <Container style={{ marginTop: '5em' }}>
+          <Route path="/" exact component={Index} />
+          <Route path="/about/" component={About} />
+          <Route path="/users/" component={Users} />
+        </Container>
       </div>
     </Router>
   );
