@@ -1,5 +1,5 @@
 import React, { Component, useState } from "react";
-import { Input } from 'semantic-ui-react';
+import { Button, Input } from 'semantic-ui-react';
 
 function AddOrganizer(props) {
   const [value, setValue] = useState('');
@@ -39,6 +39,16 @@ function AddCandidate(props) {
   );
 }
 
+function EndPreparationPhase(props) {
+  return (
+    <div>
+      <Button primary onClick={() => props.onClick()}>
+        End Preparation Phase
+      </Button>
+    </div>
+  );
+}
+
 class PreparationOrganizer extends Component {
   constructor(props) {
     super(props);
@@ -55,11 +65,16 @@ class PreparationOrganizer extends Component {
     console.log("Add candidate : " + candidateInfo);
   }
 
+  handleEndPreparationPhase() {
+    console.log("End preparation phase");
+  }
+
   render() {
     return (
       <div>
         <AddOrganizer onClick={(publicAddress) => this.handleAddOrganizer(publicAddress)} />
         <AddCandidate onClick={(candidateInfo) => this.handleAddCandidate(candidateInfo)} />
+        <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} />
       </div>
     );
   }
