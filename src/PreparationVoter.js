@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import { Icon, List } from 'semantic-ui-react';
 
-function ShowAccountInfoList(props) {
+function AccountInfoList(props) {
   const {accounts} = props;
-  const Accounts = accounts.map((account) => ShowAccountInfo(account));
+  const Accounts = accounts.map((account) => AccountInfo(account));
 
   return (
     <List divided>
@@ -12,7 +12,7 @@ function ShowAccountInfoList(props) {
   );
 }
 
-function ShowAccountInfo(account) {
+function AccountInfo(account) {
   return (
     <List.Item key={account.address}>
       {account.address}
@@ -63,7 +63,7 @@ class PreparationVoter extends Component {
   render() {
     return (
       <div>
-        <ShowAccountInfoList accounts={this.state.accounts} />
+        <AccountInfoList accounts={this.state.accounts} />
       </div>
     );
   }
