@@ -1,16 +1,16 @@
 import React, { Component } from "react";
 import { Header } from 'semantic-ui-react';
 
-function ShowVotingContractInfo(props) {
+function VotingContractInfo(props) {
   return (
     <div>
-      <ShowVotingContractStatus status={props.votingContract.status} />
-      { props.votingContract.status === "Finished" && <ShowVotingResult result={props.votingContract.result} /> }
+      <VotingContractStatus status={props.votingContract.status} />
+      { props.votingContract.status === "Finished" && <VotingResult result={props.votingContract.result} /> }
     </div>
   );
 }
 
-function ShowVotingContractStatus(props) {
+function VotingContractStatus(props) {
   return (
     <div>
       <Header as='h1'>
@@ -20,7 +20,7 @@ function ShowVotingContractStatus(props) {
   )
 }
 
-function ShowVotingResult(props) {
+function VotingResult(props) {
   return (
     <div>
       <Header as='h2'>
@@ -44,7 +44,7 @@ class Home extends Component {
   render() {
     return (
       <div>
-        <ShowVotingContractInfo votingContract={this.state.votingContract} />
+        <VotingContractInfo votingContract={this.state.votingContract} />
       </div>
     );
   }
