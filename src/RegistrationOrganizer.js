@@ -1,5 +1,6 @@
-import React, { Component } from "react";
-import { Button, List } from 'semantic-ui-react';
+import React, { Component, useState } from "react";
+import { Button, Header, Input, List, Modal } from 'semantic-ui-react';
+import * as Utils from 'web3-utils';
 
 function VoterRegistrationRequests(props) {
   const {requests, handleRegisterVoter} = props;
@@ -13,10 +14,68 @@ function VoterRegistrationRequests(props) {
 }
 
 function VoterRegistrationRequest(request, registerCallback) {
+  const [NIK, setNIK] = useState('');
+  const [hashedNIK, setHashedNIK] = useState('');
+  let disableRegister = hashedNIK !== request.hashedNIK;
+  let handleChangeNIK = (value) => {
+    setHashedNIK(value !== '' && Utils.soliditySha3(value));
+    disableRegister = hashedNIK !== request.hashedNIK;
+  }
+
+  const [modalOpen, setModalOpen] = useState(false);
+  let handleOpen = () => setModalOpen(true);
+  let handleClose = () => {
+    setModalOpen(false);
+    setNIK('');
+    setHashedNIK('');
+  };;
+
   return (
     <List.Item key={request.address}>
       <List.Content floated='right'>
-        <Button primary onClick={() => registerCallback(request)}>Register Voter</Button>
+        <Modal
+          trigger={<Button primary onClick={handleOpen}>Register Voter</Button>}
+          open={modalOpen}
+          onClose={handleClose}
+        >
+          <Modal.Header>
+            Confirm NIK
+          </Modal.Header>
+          <Modal.Content>
+            <Modal.Description>
+              <Header>
+                Name
+              </Header>
+              {request.name}
+              <Header>
+                Voter hashed NIK
+              </Header>
+              {request.hashedNIK}
+            </Modal.Description>
+            <br />
+            <br />
+            <Input
+              fluid
+              placeholder='NIK...'
+              onChange={(e) => {setNIK(e.target.value); handleChangeNIK(e.target.value)}}
+            />
+            <br />
+            <Modal.Description>
+              <Header>
+                Hashed NIK result
+              </Header>
+              {hashedNIK}
+            </Modal.Description>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button primary disabled={disableRegister} onClick={() => {registerCallback(request); handleClose()}}>
+              Register
+            </Button>
+            <Button negative onClick={handleClose}>
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </List.Content>
       <List.Content>
         <List.Item>
@@ -40,25 +99,25 @@ class RegistrationOrganizer extends Component {
       requests: [
         {
           address: '0xAddress001',
-          name: 'Name001',
-          hashedNIK: 'HashedNIK001'
+          name: 'Name1',
+          hashedNIK: '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
         },
         {
           address: '0xAddress002',
-          name: 'Name002',
-          hashedNIK: 'HashedNIK002'
+          name: 'Name123',
+          hashedNIK: '0x5569044719a1ec3b04d0afa9e7a5310c7c0473331d13dc9fafe143b2c4e8148a'
         },
         {
           address: '0xAddress003',
-          name: 'Name003',
-          hashedNIK: 'HashedNIK003'
+          name: 'NameAs Df',
+          hashedNIK: '0xeeb1894b9a65d7d3d57e261a351b0e61bbc133a6627c74fb4cc75d7e5bf913d6'
         }
       ]
     }
   }
 
   handleRegisterVoter(request) {
-    console.log(`Register ${request.address} as eligible voter`);
+    console.log(`Register ${request.address}(${request.name}) as eligible voter`);
   }
 
   render() {
