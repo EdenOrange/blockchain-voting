@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Header } from 'semantic-ui-react';
+import { Divider, Dropdown, Header } from 'semantic-ui-react';
 
 function VotingContractInfo(props) {
   return (
@@ -30,13 +30,52 @@ function VotingResult(props) {
   )
 }
 
+function VotersList(props) {
+  const {voters} = props;
+  const votersList = voters.map((voter) => ({
+    key: voter.address,
+    value: voter.address,
+    text: voter.name
+  }));
+
+  return (
+    <div>
+      <Header>
+        Registered Voters List
+      </Header>
+      <Dropdown
+        placeholder='Search your name'
+        fluid
+        search
+        clearable
+        selection
+        options={votersList}
+      />
+    </div>
+  )
+}
+
 class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
       votingContract: {
         status: "Preparation",
-        result: "Voting result"
+        result: "Voting result",
+        voters: [
+          {
+            address: '0xAddress001',
+            name: 'Name1'
+          },
+          {
+            address: '0xAddress002',
+            name: 'Name123'
+          },
+          {
+            address: '0xAddress003',
+            name: 'NameAs Df'
+          }
+        ]
       }
     }
   }
@@ -45,6 +84,8 @@ class Home extends Component {
     return (
       <div>
         <VotingContractInfo votingContract={this.state.votingContract} />
+        <Divider />
+        <VotersList voters={this.state.votingContract.voters} />
       </div>
     );
   }
