@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Form, Header, Radio } from 'semantic-ui-react';
+import { Button, Form, Header, Radio } from 'semantic-ui-react';
 
 function CandidatesChoices(props) {
   const {candidates, candidateChoice, onChange} = props;
@@ -38,6 +38,41 @@ function CandidateChoice(candidate, isCandidateChecked, onChangeCallback) {
   )
 }
 
+function CreateBallot(props) {
+  const {disabled, onClick} = props;
+
+  return (
+    <Button
+      primary
+      onClick={onClick}
+      disabled={disabled}>
+      Create Ballot
+    </Button>
+  );
+}
+
+function createVoteStringFromChoiceId(choiceId) {
+  const voteStringLength = 64;
+  const choiceCodeLength = 4;
+  const randomStringLength = voteStringLength - choiceCodeLength;
+
+  // Generate choiceCodeString
+  let choiceCodeString = parseInt(choiceId).toString(2);
+  while (choiceCodeString.length < choiceCodeLength) {
+    choiceCodeString = "0" + choiceCodeString;
+  }
+
+  // Generate randomString
+  let randomString = '';
+  while (randomString.length < randomStringLength) {
+    let randomChar = Math.round(Math.random() % 2).toString();
+    randomString += randomChar;
+  }
+
+  const voteString = choiceCodeString + randomString;
+  return voteString;
+}
+
 class VotePreparationVoter extends Component {
   constructor(props) {
     super(props);
@@ -73,7 +108,8 @@ class VotePreparationVoter extends Component {
       choice: {
         id: -1,
         name: ''
-      }
+      },
+      voteString: ''
     }
   }
 
@@ -86,6 +122,12 @@ class VotePreparationVoter extends Component {
     })
   }
 
+  handleCreateBallot = () => {
+    this.setState({
+      voteString: createVoteStringFromChoiceId(this.state.choice.id)
+    });
+  }
+
   render() {
     return (
       <div>
@@ -94,6 +136,8 @@ class VotePreparationVoter extends Component {
           candidateChoice={this.state.choice}
           onChange={this.handleChangeChoice}
         />
+        <br />
+        <CreateBallot disabled={this.state.choice.id === -1} onClick={this.handleCreateBallot} />
       </div>
     );
   }
