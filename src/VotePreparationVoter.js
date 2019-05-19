@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import { Button, Form, Header, Radio } from 'semantic-ui-react';
+import { Button, Form, Header, Modal, Radio } from 'semantic-ui-react';
+import * as Utils from 'web3-utils';
+import * as BlindSignature from 'blind-signatures';
 
 function CandidatesChoices(props) {
   const {candidates, candidateChoice, onChange} = props;
@@ -73,6 +75,37 @@ function createVoteStringFromChoiceId(choiceId) {
   return voteString;
 }
 
+function BallotCreatedModal(props) {
+  const {open, openCallback, randomValue} = props;
+  let handleClose = () => openCallback(false);
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleClose}
+      closeOnEscape={false}
+      closeOnDimmerClick={false}
+    >
+      <Modal.Header>
+        Vote has been sent
+      </Modal.Header>
+      <Modal.Content>
+        <Modal.Description>
+          <Header>
+            Please take note of this code
+          </Header>
+          {randomValue}
+        </Modal.Description>
+      </Modal.Content>
+      <Modal.Actions>
+        <Button primary onClick={handleClose}>
+          OK
+        </Button>
+      </Modal.Actions>
+    </Modal>
+  );
+}
+
 class VotePreparationVoter extends Component {
   constructor(props) {
     super(props);
@@ -103,13 +136,45 @@ class VotePreparationVoter extends Component {
             address: '0xAddress003',
             name: 'NameAs Df'
           }
+        ],
+        organizers: [ // Organizer account
+          {
+            id: '1',
+            address: '0xAddressOrg001',
+            name: 'Org1',
+            blindSigKey: { // RSA keypair, D is private held by each organizer
+              N: 29966692371364866625346898353663834134938385542002417037721577477302102136522085939472165345604159090008369291967229214089843550402783764345171829774118370421727069328975236719404868237298550523989366936116144150572205603225580613276301181810980227503747111091217434069794434110873713548193276565135873156551776781744977506384102252699464204349946745613824014413457618301726927010747822355674379832350188825717228418277968661184894099448068813151646552494933847934355517511397146924721973857101644904751900691439081133481472498369847582949341542277140564618444421223545987899994237990578140719418027385682765400810787,
+              E: 65537
+            }
+          },
+          {
+            id: '2',
+            address: '0xAddressOrg002',
+            name: 'Org2',
+            blindSigKey: {
+              N: 26458970144176529231278251478923876274581682945160630211923288556492285074551812817562954732957996890856225708775063710963505080257659492810452589951505161037289950403780584424848427034382647213927966088689259773969220432507351297342517879366775210437071365276681805376039406952355809450845271748916810754673242718443536347275958685398465694101786361797986578701119612608844428824062586235437039817380062355856918189315480847660878662520951404772466376423110443487482138333887388449385867806705579043254110057834686860727136742974754338482731437361733622421487674030607511342064989032215407906503194121394165185383797,
+              E: 65537
+            }
+          },
+          {
+            id: '3',
+            address: '0xAddressOrg003',
+            name: 'Org3',
+            blindSigKey: {
+              N: 22174933060533612279001839757293277558447636625990692079946257223347032594943597488661968989040186738935132503446965285010055923873177882577484769463195499109178479501165613614043668876610322147551149096608999387482124244500100367766728152174625193206582596173771525689770346002747421347904671941536291573608005763407437768868993893358554277826661660885093146948296152543868273304544471129280791068975551329074059044323118982282750362281455605896422650475741100638391510715626109674650392999767613861555822958045214362249243277613528444450124436766949894713659037566339120415451310965138637574175225632109970533494113,
+              E: 65537
+            }
+          }
         ]
       },
       choice: {
         id: -1,
         name: ''
       },
-      voteString: ''
+      voteString: '',
+      randomValue: '',
+      modalOpen: false,
+      accountAddress: '0xAddress001'
     }
   }
 
@@ -123,10 +188,32 @@ class VotePreparationVoter extends Component {
   }
 
   handleCreateBallot = () => {
+    const voteString = createVoteStringFromChoiceId(this.state.choice.id);
+    console.log("Vote string : " + voteString);
+    const organizers = this.state.votingContract.organizers;
+    const randomOrganizer = organizers[Math.floor(Math.random() * organizers.length)];
+    const {blinded, r} = BlindSignature.blind({
+      message: Utils.soliditySha3(voteString),
+      N: randomOrganizer.blindSigKey.N,
+      E: randomOrganizer.blindSigKey.E
+    })
+    console.log("Blinded vote to be sent to organizer id " + randomOrganizer.id + " : " + blinded);
+    console.log("Random r to be noted by voter : " + r);
     this.setState({
-      voteString: createVoteStringFromChoiceId(this.state.choice.id)
+      randomValue: r.toString(),
+      modalOpen: true
     });
+
+    // Send blinded vote to VotingContract (including the organizer that will sign)
+    const message = {
+      requesterAddress: this.state.accountAddress,
+      organizerId: randomOrganizer.id,
+      blinded: blinded.toString()
+    }
+    console.log("Send : " + JSON.stringify(message));
   }
+
+  handleModalOpen = (isModalOpen) => { this.setState({ modalOpen: isModalOpen }) }
 
   render() {
     return (
@@ -138,6 +225,7 @@ class VotePreparationVoter extends Component {
         />
         <br />
         <CreateBallot disabled={this.state.choice.id === -1} onClick={this.handleCreateBallot} />
+        <BallotCreatedModal open={this.state.modalOpen} openCallback={this.handleModalOpen} randomValue={this.state.randomValue} />
       </div>
     );
   }
