@@ -76,7 +76,7 @@ function createVoteStringFromChoiceId(choiceId) {
 }
 
 function BallotCreatedModal(props) {
-  const {open, openCallback, randomValue} = props;
+  const {open, openCallback, randomValue, voteString} = props;
   let handleClose = () => openCallback(false);
 
   return (
@@ -92,7 +92,14 @@ function BallotCreatedModal(props) {
       <Modal.Content>
         <Modal.Description>
           <Header>
-            Please take note of this code
+            Please take note of these 2 values
+          </Header>
+          <Header>
+            Vote string
+          </Header>
+          {voteString}
+          <Header>
+            Random value
           </Header>
           {randomValue}
         </Modal.Description>
@@ -200,6 +207,7 @@ class VotePreparationVoter extends Component {
     console.log("Blinded vote to be sent to organizer id " + randomOrganizer.id + " : " + blinded);
     console.log("Random r to be noted by voter : " + r);
     this.setState({
+      voteString: voteString.toString(),
       randomValue: r.toString(),
       modalOpen: true
     });
@@ -225,7 +233,12 @@ class VotePreparationVoter extends Component {
         />
         <br />
         <CreateBallot disabled={this.state.choice.id === -1} onClick={this.handleCreateBallot} />
-        <BallotCreatedModal open={this.state.modalOpen} openCallback={this.handleModalOpen} randomValue={this.state.randomValue} />
+        <BallotCreatedModal
+          open={this.state.modalOpen}
+          openCallback={this.handleModalOpen}
+          randomValue={this.state.randomValue}
+          voteString={this.state.voteString}
+        />
       </div>
     );
   }
