@@ -1,11 +1,13 @@
-import React, { Component } from "react";
-import { Button, List } from 'semantic-ui-react';
+import React, { Component, useState } from "react";
+import { Button, Input, List, Modal } from 'semantic-ui-react';
+import * as BlindSignature from 'blind-signatures';
+import { BigInteger } from 'jsbn';
 
 function BlindSigRequests(props) {
-  const {requests, organizerId} = props;
+  const {requests, organizerId, handleSign} = props;
   const Requests = requests.map((request) => {
     if (request.organizerId === organizerId) {
-      return BlindSigRequest(request);
+      return BlindSigRequest(request, handleSign);
     }
   });
 
@@ -16,13 +18,43 @@ function BlindSigRequests(props) {
   );
 }
 
-function BlindSigRequest(request) {
+function BlindSigRequest(request, signCallback) {
+  const [privateKey, setPrivateKey] = useState('');
+  let disableSign = privateKey === '';
+  const [modalOpen, setModalOpen] = useState(false);
+  let handleOpen = () => setModalOpen(true);
+  let handleClose = () => {
+    setModalOpen(false);
+    setPrivateKey('');
+  }
+
   return (
     <List.Item key={request.blinded}>
       <List.Content floated='right'>
-        <Button primary>
-          Sign
-        </Button>
+      <Modal
+          trigger={<Button primary onClick={handleOpen}>Sign this ballot</Button>}
+          open={modalOpen}
+          onClose={handleClose}
+        >
+          <Modal.Header>
+            Sign this ballot
+          </Modal.Header>
+          <Modal.Content>
+            <Input
+              fluid
+              placeholder='Private key...'
+              onChange={(e) => setPrivateKey(e.target.value)}
+            />
+          </Modal.Content>
+          <Modal.Actions>
+            <Button primary disabled={disableSign} onClick={() => {signCallback(request, privateKey); handleClose()}}>
+              Sign
+            </Button>
+            <Button negative onClick={handleClose}>
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </List.Content>
       <List.Content>
         <List.Item>
@@ -109,11 +141,38 @@ class VotePreparationOrganizer extends Component {
       ]
     }
   }
+  
+  getCurrentOrganizerAccount = (organizerId) => {
+    return this.state.organizers.find(organizer => organizer.id === organizerId);
+  }
+
+  handleSign = (request, privateKey) => {
+    console.log("Sign ballot " + request.blinded + " with privateKey : " + privateKey);
+    const key = {
+      keyPair: {
+        e: new BigInteger(this.getCurrentOrganizerAccount(this.state.organizerId).blindSigKey.E.toString()),
+        n: new BigInteger(this.getCurrentOrganizerAccount(this.state.organizerId).blindSigKey.N.toString()),
+        d: new BigInteger(privateKey.toString())
+      }
+    }
+    const signed = BlindSignature.sign({
+      blinded: request.blinded,
+      key: key
+    });
+    console.log("Signed : " + signed);
+
+    // Send signed vote to VotingContract
+    const message = {
+      requesterAddress: request.requesterAddress,
+      signed: signed.toString()
+    }
+    console.log("Send : " + JSON.stringify(message));
+  }
 
   render() {
     return (
       <div>
-        <BlindSigRequests requests={this.state.votingContract.blindSigRequests} organizerId={this.state.organizerId} />
+        <BlindSigRequests requests={this.state.votingContract.blindSigRequests} organizerId={this.state.organizerId} handleSign={this.handleSign}/>
       </div>
     );
   }
