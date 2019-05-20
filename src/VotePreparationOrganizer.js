@@ -76,37 +76,37 @@ class VotePreparationOrganizer extends Component {
         blindSigRequests: [
           {
             requesterAddress: '0xAddress001',
-            organizerId: '3',
-            blinded: '106380571'
+            organizerId: '1',
+            blinded: '119387027'
           },
           {
             requesterAddress: '0xAddress002',
-            organizerId: '2',
-            blinded: '26442040'
+            organizerId: '3',
+            blinded: '54603137'
           },
           {
             requesterAddress: '0xAddress003',
             organizerId: '3',
-            blinded: '58587046'
+            blinded: '146880363'
           },
           {
             requesterAddress: '0xAddress004',
             organizerId: '2',
-            blinded: '198956025'
+            blinded: '105656365'
           },
           {
             requesterAddress: '0xAddress005',
-            organizerId: '1',
-            blinded: '43178287'
+            organizerId: '2',
+            blinded: '110077113'
           },
           {
             requesterAddress: '0xAddress006',
             organizerId: '1',
-            blinded: '59342630'
+            blinded: '7641811'
           }
         ]
       },
-      organizerId: '1',
+      organizerId: '3', // Selected organizer account id
       organizers: [ // Organizer account
         {
           id: '1',

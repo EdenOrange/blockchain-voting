@@ -195,7 +195,7 @@ class VoteCastingVoter extends Component {
           address: '0xAddress106'
         },
       ],
-      voterAccount: 0, // Selected wallet account
+      voterAccount: 5, // Selected wallet account
       selectedAccount: 0 // Another account to be cast vote anonymously
     }
   }
@@ -226,9 +226,11 @@ class VoteCastingVoter extends Component {
     const unblinded = this.getUnblindedVote(voter, randomValue);
 
     // Send cast vote to VotingContract
+    // IMPORTANT : Send using selectedAccount(anonymous), not voterAccount(registered)
     const message = {
       voteString: voteString,
-      unblinded: unblinded.toString()
+      unblinded: unblinded.toString(),
+      organizerId: voter.organizerSignerId
     }
     console.log("Send : " + JSON.stringify(message));
   }
