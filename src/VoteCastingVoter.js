@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Header } from 'semantic-ui-react';
+import { Divider, Dropdown, Header } from 'semantic-ui-react';
 
 function BallotSignedInfo(props) {
   const {voters, voterAccount} = props;
@@ -32,6 +32,30 @@ function BallotSignedInfo(props) {
       </div>
     )
   }
+}
+
+function AccountsList(props) {
+  const {accounts, selectedAccount, handleSelectedAccount} = props;
+  const accountsList = accounts.map((account, index) => ({
+    key: index,
+    value: index,
+    text: account.address
+  }));
+
+  return (
+    <div>
+      <Header>
+        Your Accounts
+      </Header>
+      <Dropdown
+        defaultValue={selectedAccount}
+        fluid
+        selection
+        options={accountsList}
+        onChange={(e, {value}) => handleSelectedAccount(value)}
+      />
+    </div>
+  )
 }
 
 class VoteCastingVoter extends Component {
@@ -125,10 +149,18 @@ class VoteCastingVoter extends Component {
     return this.state.accounts[this.state.selectedAccount];
   }
 
+  handleSelectedAccount = (selectedAccount) => {
+    this.setState({
+      selectedAccount: selectedAccount
+    })
+  }
+
   render() {
     return (
       <div>
         <BallotSignedInfo voters={this.state.votingContract.voters} voterAccount={this.getCurrentVoterAccount()} />
+        <Divider />
+        <AccountsList accounts={this.state.accounts} selectedAccount={this.state.selectedAccount} handleSelectedAccount={this.handleSelectedAccount} />
       </div>
     );
   }
