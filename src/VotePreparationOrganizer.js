@@ -9,6 +9,7 @@ function BlindSigRequests(props) {
     if (request.organizerId === organizerId) {
       return BlindSigRequest(request, handleSign);
     }
+    return null;
   });
 
   return (

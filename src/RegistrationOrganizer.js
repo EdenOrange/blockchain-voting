@@ -14,7 +14,7 @@ function VoterRegistrationRequests(props) {
 }
 
 function VoterRegistrationRequest(request, registerCallback) {
-  const [NIK, setNIK] = useState('');
+  const [, setNIK] = useState('');
   const [hashedNIK, setHashedNIK] = useState('');
   let disableRegister = hashedNIK !== request.hashedNIK;
   let handleChangeNIK = (value) => {
