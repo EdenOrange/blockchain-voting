@@ -30,6 +30,15 @@ contract VotingContract {
     mapping(address => Organizer) organizers;
     address[] public organizerAddresses;
 
+    struct Voter {
+        string name;
+        uint256 blinded;
+        uint256 signed;
+        address signer;
+    }
+    mapping(address => Voter) voters;
+    address[] public voterAddresses;
+
     // Events
 
     // Functions
@@ -74,6 +83,22 @@ contract VotingContract {
             true
         );
         organizerAddresses.push(organizerAddress);
+    }
+
+    function addVoter(
+        address voterAddress,
+        string memory name
+    )
+        public
+        onlyOrganizer
+    {
+        voters[voterAddress] = Voter(
+            name,
+            uint256(0),
+            uint256(0),
+            msg.sender
+        );
+        voterAddresses.push(voterAddress);
     }
     // internal
     // private
