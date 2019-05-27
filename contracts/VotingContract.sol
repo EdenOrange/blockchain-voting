@@ -127,6 +127,18 @@ contract VotingContract {
         ));
         blinds.push(blinded);
     }
+
+    function signBlindSigRequest(
+        address requester,
+        uint256 blinded,
+        uint256 signed
+    )
+        public
+        onlyOrganizer
+    {
+        require(blindSigRequests[blinded].requester != address(0), "Blind does not exist");
+        voters[requester].signed = signed;
+    }
     // internal
     // private
 }
