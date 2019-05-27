@@ -39,6 +39,13 @@ contract VotingContract {
     mapping(address => Voter) voters;
     address[] public voterAddresses;
 
+    struct BlindSigRequest {
+        address requester;
+        address signer;
+    }
+    mapping(uint256 => BlindSigRequest) blindSigRequests;
+    uint256[] blinds;
+
     // Events
 
     // Functions
@@ -54,6 +61,11 @@ contract VotingContract {
 
     modifier onlyOrganizer {
         require(organizers[msg.sender].exists, "Not an organizer");
+        _;
+    }
+
+    modifier onlyVoter {
+        require(voters[msg.sender].signer != address(0), "Not a voter");
         _;
     }
     // fallback function (if exists)
@@ -99,6 +111,21 @@ contract VotingContract {
             msg.sender
         );
         voterAddresses.push(voterAddress);
+    }
+
+    function requestBlindSig(
+        address signer,
+        uint256 blinded
+    )
+        public
+        onlyVoter
+    {
+        require(blindSigRequests[blinded].requester == address(0), "Blind exists");
+        blindSigRequests[blinded] = (BlindSigRequest(
+            msg.sender,
+            signer
+        ));
+        blinds.push(blinded);
     }
     // internal
     // private
