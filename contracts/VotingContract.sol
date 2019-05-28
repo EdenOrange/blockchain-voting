@@ -35,6 +35,7 @@ contract VotingContract {
         uint256 blinded;
         uint256 signed;
         address signer;
+        bool exists;
     }
     mapping(address => Voter) voters;
     address[] public voterAddresses;
@@ -45,6 +46,14 @@ contract VotingContract {
     }
     mapping(uint256 => BlindSigRequest) blindSigRequests;
     uint256[] blinds;
+
+    struct Vote {
+        uint256 voteString;
+        uint256 unblinded;
+        address signer;
+        bool counted;
+    }
+    Vote[] public votes;
 
     // Events
 
@@ -108,7 +117,8 @@ contract VotingContract {
             name,
             uint256(0),
             uint256(0),
-            msg.sender
+            msg.sender,
+            true
         );
         voterAddresses.push(voterAddress);
     }
@@ -139,6 +149,65 @@ contract VotingContract {
         require(blindSigRequests[blinded].requester != address(0), "Blind does not exist");
         voters[requester].signed = signed;
     }
+
+    function vote(
+        uint256 voteString,
+        uint256 unblinded,
+        address signer
+    )
+        public
+    {
+        // Make sure voter is not using its registered account
+        require(!voters[msg.sender].exists, "Vote sender is registered as voter");
+
+        // Verify voteString with unblinded if its signed by signer
+        uint256 message = uint256(keccak256(abi.encode(voteString)));
+        uint256 N = organizers[signer].blindSigKey.N;
+        uint256 E = organizers[signer].blindSigKey.E;
+        require(verifyBlindSig(unblinded, N, E, message), "Blind signature is incorrect");
+
+        // Store the votes
+        votes.push(Vote(voteString, unblinded, signer, false));
+    }
     // internal
     // private
+    function verifyBlindSig(
+        uint256 unblinded,
+        uint256 N,
+        uint256 E,
+        uint256 message
+    )
+        private
+        returns (bool)
+    {
+        uint256 originalMessage = expmod(unblinded, E, N);
+        bool result = message == originalMessage;
+        return result;
+    }
+
+    // Source : https://medium.com/@rbkhmrcr/precompiles-solidity-e5d29bd428c4
+    // Calling expmod precompile
+    function expmod(uint256 base, uint256 e, uint256 m) private returns (uint256 o) {
+    // are all of these inside the precompile now?
+
+    assembly {
+        // define pointer
+        let p := mload(0x40)
+        // store data assembly-favouring ways
+        mstore(p, 0x20)             // Length of Base
+        mstore(add(p, 0x20), 0x20)  // Length of Exponent
+        mstore(add(p, 0x40), 0x20)  // Length of Modulus
+        mstore(add(p, 0x60), base)  // Base
+        mstore(add(p, 0x80), e)     // Exponent
+        mstore(add(p, 0xa0), m)     // Modulus
+        // call modexp precompile! -- old school gas handling
+        let success := call(sub(gas, 2000), 0x05, 0, p, 0xc0, p, 0x20)
+        // gas fiddling
+        switch success case 0 {
+            revert(0, 0)
+        }
+        // data
+        o := mload(p)
+        }
+    }
 }
