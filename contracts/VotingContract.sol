@@ -10,6 +10,9 @@ contract VotingContract {
         Finished
     }
     State public state;
+    uint256 public endPreparationTime;
+    uint256 public endRegistrationTime;
+    uint256 public endVotingTime;
 
     struct Candidate {
         uint256 id;
@@ -58,7 +61,16 @@ contract VotingContract {
     // Events
 
     // Functions
-    constructor(string memory name, uint256 N, uint256 E) public {
+    constructor(
+        string memory name,
+        uint256 N,
+        uint256 E,
+        uint256 endPreparationTimestamp,
+        uint256 endRegistrationTimestamp,
+        uint256 endVotingTimestamp
+    )
+        public
+    {
         state = State.Preparation;
         organizers[msg.sender] = Organizer(
             name,
@@ -66,6 +78,9 @@ contract VotingContract {
             true
         );
         organizerAddresses.push(msg.sender);
+        endPreparationTime = endPreparationTimestamp;
+        endRegistrationTime = endRegistrationTimestamp;
+        endVotingTime = endVotingTimestamp;
     }
 
     modifier onlyOrganizer {
@@ -86,7 +101,7 @@ contract VotingContract {
         public
         onlyOrganizer
     {
-        candidates.push(Candidate(candidates.length, name));
+        candidates.push(Candidate(candidates.length, name, 0));
     }
 
     function addOrganizer(
@@ -169,6 +184,29 @@ contract VotingContract {
         // Store the votes
         votes.push(Vote(voteString, unblinded, signer, false));
     }
+
+    function tally() public onlyOrganizer {
+        require(state == State.Tallying, "State is not tallying");
+        endTally();
+    }
+
+    function endPreparation() public onlyOrganizer {
+        require(state == State.Preparation, "State is not preparation");
+        require(block.timestamp >= endPreparationTime, "Preparation time has not ended yet");
+        state = State.Registration;
+    }
+
+    function endRegistration() public onlyOrganizer {
+        require(state == State.Registration, "State is not registration");
+        require(block.timestamp >= endRegistrationTime, "Registration time has not ended yet");
+        state = State.Voting;
+    }
+
+    function endVoting() public onlyOrganizer {
+        require(state == State.Voting, "State is not voting");
+        require(block.timestamp >= endVotingTime, "Voting time has not ended yet");
+        state = State.Tallying;
+    }
     // internal
     // private
     function verifyBlindSig(
@@ -183,6 +221,10 @@ contract VotingContract {
         uint256 originalMessage = expmod(unblinded, E, N);
         bool result = message == originalMessage;
         return result;
+    }
+
+    function endTally() private {
+        state = State.Finished;
     }
 
     // Source : https://medium.com/@rbkhmrcr/precompiles-solidity-e5d29bd428c4
