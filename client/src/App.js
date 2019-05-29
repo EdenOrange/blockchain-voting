@@ -14,6 +14,7 @@ import PreparationVoter from './PreparationVoter';
 import RegistrationVoter from './RegistrationVoter';
 import VotePreparationVoter from './VotePreparationVoter';
 import VoteCastingVoter from './VoteCastingVoter';
+import Test from './Test';
 
 class App extends Component {
   constructor(props) {
@@ -47,6 +48,7 @@ class App extends Component {
               <Route path="/organizer/registration/" exact component={RegistrationOrganizer} />
               <Route path="/organizer/vote_preparation/" exact component={VotePreparationOrganizer} />
               <Route path="/organizer/vote_counting/" exact component={VoteCountingOrganizer} />
+              <Route path="/test" exact component={Test} />
             </Container>
           </div>
         </Router>
@@ -75,6 +77,7 @@ class App extends Component {
               <Route path="/voter/registration/" exact component={RegistrationVoter} />
               <Route path="/voter/vote_preparation/" exact component={VotePreparationVoter} />
               <Route path="/voter/vote_casting/" exact component={VoteCastingVoter} />
+              <Route path="/test" exact component={Test} />
             </Container>
           </div>
         </Router>
