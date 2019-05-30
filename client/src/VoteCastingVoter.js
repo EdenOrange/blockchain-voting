@@ -1,7 +1,7 @@
 import React, { Component, useState } from "react";
 import { Button, Divider, Dropdown, Form, Header, Input, TextArea } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
-import * as BlindSignature from 'blind-signatures';
+import * as BlindSignature from './rsablind.js';
 
 function BallotSignedInfo(props) {
   const {voters, voterAccount} = props;
@@ -126,6 +126,12 @@ class VoteCastingVoter extends Component {
             blinded: '27844615070844257491998880898393610979157395483180153717177165365073524479138',
             signed: '59332976150495495034205625478082738719976322181890094820235788008813257869893',
             organizerSignerId: '3'
+          },
+          {
+            address: '0xAddress006',
+            blinded: '955239002786347003674711759228335528752480761282941507602889871959791655984',
+            signed: '43575882499286586383261273537472795126604734513969620380699759739814221075154',
+            organizerSignerId: '2'
           }
         ],
         organizers: [ // Organizer account
@@ -175,6 +181,9 @@ class VoteCastingVoter extends Component {
           address: '0xAddress005'
         },
         {
+          address: '0xAddress006'
+        },
+        {
           address: '0xAddress101'
         },
         {
@@ -188,9 +197,12 @@ class VoteCastingVoter extends Component {
         },
         {
           address: '0xAddress105'
+        },
+        {
+          address: '0xAddress106'
         }
       ],
-      voterAccount: 0, // Selected wallet account
+      voterAccount: 5, // Selected wallet account
       selectedAccount: 0 // Another account to be cast vote anonymously
     }
   }

@@ -1,9 +1,22 @@
 
 
 import React, { Component } from "react";
-import * as BlindSignature from 'blind-signatures';
 import { BigInteger } from 'jsbn'; 
 import * as Utils from 'web3-utils';
+import * as BlindSignature from './rsablind.js';
+
+function messageToHash(message) {
+  const messageHash = Utils.soliditySha3(message);
+  return messageHash.substring(2, messageHash.length);
+}
+
+function messageToHashInt(message) {
+  const messageHash = messageToHash(message);
+  console.log("messageToHashInt", messageHash.toString());
+  const messageBig = new BigInteger(messageHash, 16);
+  console.log("messageBig", messageBig.toString());
+  return messageBig;
+}
 
 function TestBlindSig(props) {
   
@@ -90,6 +103,20 @@ function TestBlindSig(props) {
   } else {
     console.log('Bob: Invalid signature');
   }
+
+  const testUnblinded = "18431452880217904135031932785117497248237962884253514036659836759180181730598";
+  const testE = new BigInteger("65537");
+  const testN = new BigInteger("58697532336480146441198642100070341275175223310790866838056318326792138477057");
+  const message = Utils.soliditySha3({
+    type: "bytes32",
+    value: "0x02d2acbe4891f6f0de2484eeec32d8151398f1fca7162ed1727f499302afc87f"
+  });
+  console.log(message);
+  const verifyUnblinded = new BigInteger(testUnblinded);
+  const originalMessage = verifyUnblinded.modPow(testE, testN);
+  const messageHash = messageToHashInt(message);
+  console.log("messageHash", messageHash.toString());
+  console.log("originalMessage", originalMessage.toString());
 /*
   const N = "58697532336480146441198642100070341275175223310790866838056318326792138477057";
   const E = "65537";

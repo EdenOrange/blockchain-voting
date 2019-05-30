@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Button, Form, Header, Modal, Radio, TextArea } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
-import * as BlindSignature from 'blind-signatures';
+import * as BlindSignature from './rsablind.js';
 
 function CandidatesChoices(props) {
   const {candidates, candidateChoice, onChange} = props;
@@ -54,24 +54,17 @@ function CreateBallot(props) {
 }
 
 function createVoteStringFromChoiceId(choiceId) {
-  const voteStringLength = 64;
-  const choiceCodeLength = 4;
-  const randomStringLength = voteStringLength - choiceCodeLength;
-
-  // Generate choiceCodeString
-  let choiceCodeString = parseInt(choiceId).toString(2);
-  while (choiceCodeString.length < choiceCodeLength) {
-    choiceCodeString = "0" + choiceCodeString;
+  // Generates 32 bytes of voteString : 1 byte choiceCode + 31 random bytes
+  const prefix = "0x";
+  // Generate choiceCodeByte
+  let choiceCodeByte = choiceId < 16 ? "0" : "";
+  choiceCodeByte += parseInt(choiceId).toString(16);
+  // Generate randomBytes
+  let randomBytes = "";
+  for (let i = 0; i < 62; i++) {
+    randomBytes += parseInt(Math.floor(Math.random() * 16)).toString(16);
   }
-
-  // Generate randomString
-  let randomString = '';
-  while (randomString.length < randomStringLength) {
-    let randomChar = Math.round(Math.random() % 2).toString();
-    randomString += randomChar;
-  }
-
-  const voteString = choiceCodeString + randomString;
+  const voteString = prefix + choiceCodeByte + randomBytes;
   return voteString;
 }
 
@@ -221,7 +214,6 @@ class VotePreparationVoter extends Component {
       blinded: blinded.toString()
     }
     console.log("Send : " + JSON.stringify(message));
-    console.log(randomOrganizer);
   }
 
   handleModalOpen = (isModalOpen) => { this.setState({ modalOpen: isModalOpen }) }

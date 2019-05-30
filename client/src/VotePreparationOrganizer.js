@@ -1,6 +1,6 @@
 import React, { Component, useState } from "react";
 import { Button, Header, Form, Input, List, Modal, TextArea } from 'semantic-ui-react';
-import * as BlindSignature from 'blind-signatures';
+import * as BlindSignature from './rsablind.js';
 import { BigInteger } from 'jsbn';
 
 function BlindSigRequests(props) {
@@ -102,10 +102,15 @@ class VotePreparationOrganizer extends Component {
             requesterAddress: '0xAddress005',
             organizerId: '3',
             blinded: '27844615070844257491998880898393610979157395483180153717177165365073524479138'
+          },
+          {
+            requesterAddress: '0xAddress006',
+            organizerId: '2',
+            blinded: '955239002786347003674711759228335528752480761282941507602889871959791655984'
           }
         ]
       },
-      organizerId: '3', // Selected organizer account id
+      organizerId: '2', // Selected organizer account id
       organizers: [ // Organizer account
         {
           id: '1',

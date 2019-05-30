@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Button, Divider, Header, List } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
-import * as BlindSignature from 'blind-signatures';
+import * as BlindSignature from './rsablind.js';
 
 function EndVotingInfo(props) {
   const {endVotingTime, status} = props;
