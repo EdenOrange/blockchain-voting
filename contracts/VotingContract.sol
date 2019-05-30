@@ -187,7 +187,7 @@ contract VotingContract {
         require(!voteExists[voteString], "Vote string exists");
 
         // Verify voteString with unblinded if its signed by signer
-        uint256 message = uint256(keccak256(abi.encode(voteString)));
+        bytes32 message = keccak256(abi.encode(voteString));
         uint256 N = organizers[signer].blindSigKey.N;
         uint256 E = organizers[signer].blindSigKey.E;
         require(verifyBlindSig(unblinded, N, E, message), "Blind signature is incorrect");
@@ -239,14 +239,14 @@ contract VotingContract {
         uint256 unblinded,
         uint256 N,
         uint256 E,
-        uint256 message
+        bytes32 message
     )
-        private
-        returns (bool)
+        public
+        returns (bool result)
     {
-        uint256 originalMessage = expmod(unblinded, E, N);
-        bool result = message == originalMessage;
-        return result;
+        bytes32 originalMessage = bytes32(expmod(unblinded, E, N));
+        bytes32 hashMessage = keccak256(abi.encode(message));
+        result = hashMessage == originalMessage;
     }
 
     function endTally() private {
