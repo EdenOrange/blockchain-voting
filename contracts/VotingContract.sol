@@ -147,7 +147,7 @@ contract VotingContract {
             name,
             uint256(0),
             uint256(0),
-            msg.sender,
+            address(0),
             true
         );
         voterAddresses.push(voterAddress);
