@@ -124,6 +124,7 @@ contract VotingContract {
         onlyOrganizer
     {
         require(state == State.Preparation, "State is not preparation");
+        require(!organizers[organizerAddress].exists, "Organizer already exists");
         organizers[organizerAddress] = Organizer(
             name,
             BlindSigKey(N, E),
@@ -140,6 +141,7 @@ contract VotingContract {
         onlyOrganizer
     {
         require(state == State.Registration, "State is not registration");
+        require(!voters[voterAddress].exists, "Voter is already registered");
         voters[voterAddress] = Voter(
             name,
             uint256(0),
