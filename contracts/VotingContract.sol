@@ -48,6 +48,7 @@ contract VotingContract {
     struct BlindSigRequest {
         address requester;
         address signer;
+        bool signed;
     }
     mapping(uint256 => BlindSigRequest) blindSigRequests;
     uint256[] blinds;
@@ -161,11 +162,13 @@ contract VotingContract {
     {
         require(state == State.Voting, "State is not voting");
         require(blindSigRequests[blinded].requester == address(0), "Blind exists");
-        blindSigRequests[blinded] = (BlindSigRequest(
+        blindSigRequests[blinded] = BlindSigRequest(
             msg.sender,
-            signer
-        ));
+            signer,
+            false
+        );
         blinds.push(blinded);
+        voters[msg.sender].blinded = blinded;
     }
 
     function signBlindSigRequest(
