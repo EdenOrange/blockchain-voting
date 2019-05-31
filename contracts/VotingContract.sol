@@ -181,6 +181,8 @@ contract VotingContract {
     {
         require(state == State.Voting, "State is not voting");
         require(blindSigRequests[blinded].requester != address(0), "Blind does not exist");
+        require(!blindSigRequests[blinded].signed, "Request is already signed");
+        blindSigRequests[blinded].signed = true;
         voters[requester].signed = signed;
     }
 
