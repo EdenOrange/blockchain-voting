@@ -105,6 +105,7 @@ contract VotingContract {
         public
         onlyOrganizer
     {
+        require(state == State.Preparation, "State is not preparation");
         candidates[uint8(candidateIds.length)] = Candidate(
             name,
             0,
@@ -122,6 +123,7 @@ contract VotingContract {
         public
         onlyOrganizer
     {
+        require(state == State.Preparation, "State is not preparation");
         organizers[organizerAddress] = Organizer(
             name,
             BlindSigKey(N, E),
@@ -137,6 +139,7 @@ contract VotingContract {
         public
         onlyOrganizer
     {
+        require(state == State.Registration, "State is not registration");
         voters[voterAddress] = Voter(
             name,
             uint256(0),
@@ -154,6 +157,7 @@ contract VotingContract {
         public
         onlyVoter
     {
+        require(state == State.Voting, "State is not voting");
         require(blindSigRequests[blinded].requester == address(0), "Blind exists");
         blindSigRequests[blinded] = (BlindSigRequest(
             msg.sender,
@@ -170,6 +174,7 @@ contract VotingContract {
         public
         onlyOrganizer
     {
+        require(state == State.Voting, "State is not voting");
         require(blindSigRequests[blinded].requester != address(0), "Blind does not exist");
         voters[requester].signed = signed;
     }
@@ -181,6 +186,7 @@ contract VotingContract {
     )
         public
     {
+        require(state == State.Voting, "State is not voting");
         // Make sure voter is not using its registered account
         require(!voters[msg.sender].exists, "Vote sender is registered as voter");
         // Check if voteString has been used
