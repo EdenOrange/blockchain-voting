@@ -145,7 +145,7 @@ class VotePreparationVoter extends Component {
             address: '0xAddressOrg001',
             name: 'Org1',
             blindSigKey: { // RSA keypair, D is private held by each organizer
-              N: '78308813544601119203537647274085596537008054539298091635048937059441638602911',
+              N: '76371029918972468664941514738317813949700823831516674062130698696256739747471',
               E: '65537'
             }
           },
@@ -154,7 +154,7 @@ class VotePreparationVoter extends Component {
             address: '0xAddressOrg002',
             name: 'Org2',
             blindSigKey: {
-              N: '58697532336480146441198642100070341275175223310790866838056318326792138477057',
+              N: '84363999601518293055825661401325254763629655239082503904477611930728364455689',
               E: '65537'
             }
           },
@@ -163,7 +163,7 @@ class VotePreparationVoter extends Component {
             address: '0xAddressOrg003',
             name: 'Org3',
             blindSigKey: {
-              N: '67253331087594991077797839859018821584857482008345015897914384596160310638849',
+              N: '67478541602739783545562006148578430599142391044897235744290252182816844486133',
               E: '65537'
             }
           }

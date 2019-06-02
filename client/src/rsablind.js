@@ -81,8 +81,6 @@ function verify({ unblinded, key, message, E, N }) {
 
   const originalMsg = unblinded.modPow(E, N);
   const result = messageHash.equals(originalMsg);
-  console.log("test : originalMsg", originalMsg.toString());
-  console.log("test : messageHash", messageHash.toString());
   return result;
 }
 
