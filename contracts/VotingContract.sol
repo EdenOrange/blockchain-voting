@@ -221,6 +221,8 @@ contract VotingContract {
             uint8 candidateId = uint8(votes[i].voteString[0]);
             // check candidateId from votes[i].voteString
             candidates[candidateId].voteCount++;
+            // Mark vote as counted
+            votes[i].counted = true;
             // candidate[candidateId].voteCount++
             countedVotes++;
         }
