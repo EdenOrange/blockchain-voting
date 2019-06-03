@@ -19,20 +19,16 @@ contract VotingContract {
         uint256 voteCount;
         bool exists;
     }
-    mapping(uint8 => Candidate) candidates; // uint8 candidateId (bytes1) to Candidate
+    mapping(uint8 => Candidate) public candidates; // uint8 candidateId (bytes1) to Candidate
     bytes1[] public candidateIds;
-
-    struct BlindSigKey {
-        uint256 N;
-        uint256 E;
-    }
 
     struct Organizer {
         string name;
-        BlindSigKey blindSigKey;
+        uint256 N;
+        uint256 E;
         bool exists;
     }
-    mapping(address => Organizer) organizers;
+    mapping(address => Organizer) public organizers;
     address[] public organizerAddresses;
 
     struct Voter {
@@ -42,7 +38,7 @@ contract VotingContract {
         address signer;
         bool exists;
     }
-    mapping(address => Voter) voters;
+    mapping(address => Voter) public voters;
     address[] public voterAddresses;
 
     struct BlindSigRequest {
@@ -50,7 +46,7 @@ contract VotingContract {
         address signer;
         bool signed;
     }
-    mapping(uint256 => BlindSigRequest) blindSigRequests;
+    mapping(uint256 => BlindSigRequest) public blindSigRequests;
     uint256[] blinds;
 
     struct Vote {
@@ -60,7 +56,7 @@ contract VotingContract {
         bool counted;
     }
     Vote[] public votes;
-    mapping(bytes32 => bool) voteExists; // bytes32 voteString to bool
+    mapping(bytes32 => bool) public voteExists; // bytes32 voteString to bool
     uint256 public countedVotes;
 
     // Events
@@ -79,7 +75,8 @@ contract VotingContract {
         state = State.Preparation;
         organizers[msg.sender] = Organizer(
             name,
-            BlindSigKey(N, E),
+            N,
+            E,
             true
         );
         organizerAddresses.push(msg.sender);
@@ -128,7 +125,8 @@ contract VotingContract {
         require(!organizers[organizerAddress].exists, "Organizer already exists");
         organizers[organizerAddress] = Organizer(
             name,
-            BlindSigKey(N, E),
+            N,
+            E,
             true
         );
         organizerAddresses.push(organizerAddress);
@@ -202,8 +200,8 @@ contract VotingContract {
 
         // Verify voteString with unblinded if its signed by signer
         bytes32 message = keccak256(abi.encode(voteString));
-        uint256 N = organizers[signer].blindSigKey.N;
-        uint256 E = organizers[signer].blindSigKey.E;
+        uint256 N = organizers[signer].N;
+        uint256 E = organizers[signer].E;
         require(verifyBlindSig(unblinded, N, E, message), "Blind signature is incorrect");
 
         // Store the votes
