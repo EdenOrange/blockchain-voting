@@ -52,7 +52,7 @@ class App extends Component {
     if (this.state.loading) {
       return "Loading drizzle...";
     }
-    
+
     if (this.state.isOrganizer) {
       return (
         <Router>
@@ -71,11 +71,51 @@ class App extends Component {
             </Menu>
     
             <Container style={{ marginTop: '5em' }}>
-              <Route path="/" exact component={Home} />
-              <Route path="/organizer/preparation/" exact component={PreparationOrganizer} />
-              <Route path="/organizer/registration/" exact component={RegistrationOrganizer} />
-              <Route path="/organizer/vote_preparation/" exact component={VotePreparationOrganizer} />
-              <Route path="/organizer/vote_counting/" exact component={VoteCountingOrganizer} />
+              <Route path="/" exact
+                render={(routeProps) => (
+                  <Home
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/organizer/preparation/" exact
+                render={(routeProps) => (
+                  <PreparationOrganizer
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/organizer/registration/" exact
+                render={(routeProps) => (
+                  <RegistrationOrganizer
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/organizer/vote_preparation/" exact
+                render={(routeProps) => (
+                  <VotePreparationOrganizer
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/organizer/vote_counting/" exact
+                render={(routeProps) => (
+                  <VoteCountingOrganizer
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
               <Route path="/test" exact component={Test} />
             </Container>
           </div>
@@ -100,11 +140,51 @@ class App extends Component {
             </Menu>
     
             <Container style={{ marginTop: '5em' }}>
-              <Route path="/" exact component={Home} />
-              <Route path="/voter/preparation/" exact component={PreparationVoter} />
-              <Route path="/voter/registration/" exact component={RegistrationVoter} />
-              <Route path="/voter/vote_preparation/" exact component={VotePreparationVoter} />
-              <Route path="/voter/vote_casting/" exact component={VoteCastingVoter} />
+            <Route path="/" exact
+                render={(routeProps) => (
+                  <Home
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/voter/preparation/" exact
+                render={(routeProps) => (
+                  <PreparationVoter
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/voter/registration/" exact
+                render={(routeProps) => (
+                  <RegistrationVoter
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/voter/vote_preparation/" exact
+                render={(routeProps) => (
+                  <VotePreparationVoter
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
+              <Route path="/voter/vote_casting/" exact
+                render={(routeProps) => (
+                  <VoteCastingVoter
+                    {...routeProps}
+                    drizzle={this.props.drizzle}
+                    drizzleState={this.state.drizzleState}
+                  />
+                )}
+              />
               <Route path="/test" exact component={Test} />
             </Container>
           </div>
