@@ -20,11 +20,39 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOrganizer: true
+      isOrganizer: true,
+      loading: true,
+      drizzleState: null
     }
   }
 
+  componentDidMount() {
+    const {drizzle} = this.props;
+    
+    // Subscribe to changes in the store
+    this.unsubscribe = drizzle.store.subscribe(() => {
+      // Every time the store updates, grab the state from drizzle
+      const drizzleState = drizzle.store.getState();
+
+      // Check to see if it's ready, if so, update local component state
+      if (drizzleState.drizzleStatus.initialized) {
+        this.setState({
+          loading: false,
+          drizzleState
+        });
+      }
+    })
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe();
+  }
+
   render() {
+    if (this.state.loading) {
+      return "Loading drizzle...";
+    }
+    
     if (this.state.isOrganizer) {
       return (
         <Router>
