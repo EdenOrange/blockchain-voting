@@ -1,11 +1,19 @@
 import React, { Component } from "react";
 import { Divider, Dropdown, Header, List } from 'semantic-ui-react';
 
+const Status = {
+  0: 'Preparation',
+  1: 'Registration',
+  2: 'Voting',
+  3: 'Tallying',
+  4: 'Finished'
+}
+
 function VotingContractInfo(props) {
   return (
     <div>
-      <VotingContractStatus status={props.votingContract.status} />
-      { props.votingContract.status === "Finished" && <VotingResult result={props.votingContract.result} /> }
+      <VotingContractStatus status={props.votingStatus} />
+      { props.votingStatus === 4 && <VotingResult result={props.votingContract.result} /> }
     </div>
   );
 }
@@ -14,7 +22,7 @@ function VotingContractStatus(props) {
   return (
     <div>
       <Header as='h1'>
-        Voting contract status : {props.status}
+        Voting contract status : {props.status && Status[props.status.value]}
       </Header>
     </div>
   )
@@ -83,6 +91,10 @@ class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      dataKeyStatus: null,
+      dataKeyCandidates: null,
+      dataKeyCandidateIds: null,
+      dataKeyCandidateCount: null,
       votingContract: {
         status: "Preparation",
         result: "Voting result",
@@ -114,10 +126,53 @@ class Home extends Component {
     }
   }
 
+  componentDidMount() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const dataKeyStatus = contract.methods.state.cacheCall();
+    const dataKeyCandidateCount = contract.methods.candidateCount.cacheCall();
+    this.setState({
+      dataKeyStatus,
+      dataKeyCandidateCount
+    });
+  }
+
+  componentDidUpdate() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = this.props.drizzleState.contracts;
+
+    const candidateCount = VotingContract.candidateCount[this.state.dataKeyCandidateCount];
+    let dataKeyCandidateIds = [];
+    if (candidateCount && this.state.dataKeyCandidateIds == null) {
+      for (let i = 0; i < candidateCount.value; i++) {
+        dataKeyCandidateIds.push(contract.methods.candidateIds.cacheCall(i));
+      }
+      this.setState({ dataKeyCandidateIds: dataKeyCandidateIds });
+    }
+    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null) {
+      let dataKeyCandidates = [];
+      for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
+        const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
+        if (candidateId) {
+          dataKeyCandidates.push(contract.methods.candidates.cacheCall(candidateId.value));
+        }
+      }
+
+      if (dataKeyCandidates.length > 0) {
+        console.log(dataKeyCandidates);
+        this.setState({ dataKeyCandidates: dataKeyCandidates });
+      }
+    }
+  }
+
   render() {
+    const {VotingContract} = this.props.drizzleState.contracts;
+    const status = VotingContract.state[this.state.dataKeyStatus];
+
     return (
       <div>
-        <VotingContractInfo votingContract={this.state.votingContract} />
+        <VotingContractInfo votingContract={this.state.votingContract} votingStatus={status} />
         <Divider />
         <CandidatesList candidates={this.state.votingContract.candidates} />
         <Divider />

@@ -21,6 +21,7 @@ contract VotingContract {
     }
     mapping(uint8 => Candidate) public candidates; // uint8 candidateId (bytes1) to Candidate
     bytes1[] public candidateIds;
+    uint8 public candidateCount;
 
     struct Organizer {
         string name;
@@ -30,6 +31,7 @@ contract VotingContract {
     }
     mapping(address => Organizer) public organizers;
     address[] public organizerAddresses;
+    uint256 public organizerCount;
 
     struct Voter {
         string name;
@@ -40,6 +42,7 @@ contract VotingContract {
     }
     mapping(address => Voter) public voters;
     address[] public voterAddresses;
+    uint256 public voterCount;
 
     struct BlindSigRequest {
         address requester;
@@ -47,7 +50,8 @@ contract VotingContract {
         bool signed;
     }
     mapping(uint256 => BlindSigRequest) public blindSigRequests;
-    uint256[] blinds;
+    uint256[] public blinds;
+    uint256 public blindCount;
 
     struct Vote {
         bytes32 voteString;
@@ -56,6 +60,7 @@ contract VotingContract {
         bool counted;
     }
     Vote[] public votes;
+    uint256 public voteCount;
     mapping(bytes32 => bool) public voteExists; // bytes32 voteString to bool
     uint256 public countedVotes;
 
@@ -80,6 +85,7 @@ contract VotingContract {
             true
         );
         organizerAddresses.push(msg.sender);
+        organizerCount++;
         endPreparationTime = endPreparationTimestamp;
         endRegistrationTime = endRegistrationTimestamp;
         endVotingTime = endVotingTimestamp;
@@ -110,6 +116,7 @@ contract VotingContract {
             true
         );
         candidateIds.push(bytes32(candidateIds.length)[31]);
+        candidateCount++;
     }
 
     function addOrganizer(
@@ -130,6 +137,7 @@ contract VotingContract {
             true
         );
         organizerAddresses.push(organizerAddress);
+        organizerCount++;
     }
 
     function addVoter(
@@ -149,6 +157,7 @@ contract VotingContract {
             true
         );
         voterAddresses.push(voterAddress);
+        voterCount++;
     }
 
     function requestBlindSig(
@@ -166,6 +175,7 @@ contract VotingContract {
             false
         );
         blinds.push(blinded);
+        blindCount++;
         voters[msg.sender].blinded = blinded;
     }
 
@@ -277,6 +287,7 @@ contract VotingContract {
         // Check if candidateId from voteString is correct
         require(candidates[uint8(voteString[0])].exists, "Invalid candidate id");
         votes.push(Vote(voteString, unblinded, signer, false));
+        voteCount++;
         voteExists[voteString] = true;
     }
 
