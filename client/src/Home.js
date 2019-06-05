@@ -40,7 +40,9 @@ function VotingResult(props) {
 
 function CandidatesList(props) {
   const {candidates} = props;
-  const Candidates = candidates.map((candidate) => CandidateInfo(candidate));
+  // console.log(candidates);
+
+  const Candidates = candidates.map((candidate, index) => CandidateInfo(candidate, index));
 
   return (
     <div>
@@ -54,10 +56,10 @@ function CandidatesList(props) {
   )
 }
 
-function CandidateInfo(candidate) {
+function CandidateInfo(candidate, index) {
   return (
-    <List.Item key={candidate.id}>
-      {candidate.name}
+    <List.Item key={index}>
+      {candidate.value.name}
     </List.Item>
   )
 }
@@ -137,7 +139,7 @@ class Home extends Component {
     });
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
     const {VotingContract} = this.props.drizzleState.contracts;
@@ -150,7 +152,7 @@ class Home extends Component {
       }
       this.setState({ dataKeyCandidateIds: dataKeyCandidateIds });
     }
-    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null) {
+    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates === prevState.dataKeyCandidates) {
       let dataKeyCandidates = [];
       for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
         const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
@@ -160,7 +162,6 @@ class Home extends Component {
       }
 
       if (dataKeyCandidates.length > 0) {
-        console.log(dataKeyCandidates);
         this.setState({ dataKeyCandidates: dataKeyCandidates });
       }
     }
@@ -170,11 +171,21 @@ class Home extends Component {
     const {VotingContract} = this.props.drizzleState.contracts;
     const status = VotingContract.state[this.state.dataKeyStatus];
 
+    let candidates = [];
+    if (this.state.dataKeyCandidates) {
+      for (const dataKeyCandidate of this.state.dataKeyCandidates) {
+        const candidate = VotingContract.candidates[dataKeyCandidate];
+        if (candidate) {
+          candidates.push(candidate);
+        }
+      }
+    }
+
     return (
       <div>
         <VotingContractInfo votingContract={this.state.votingContract} votingStatus={status} />
         <Divider />
-        <CandidatesList candidates={this.state.votingContract.candidates} />
+        <CandidatesList candidates={candidates} />
         <Divider />
         <VotersList voters={this.state.votingContract.voters} />
       </div>
