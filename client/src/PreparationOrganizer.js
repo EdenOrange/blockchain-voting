@@ -84,7 +84,8 @@ class PreparationOrganizer extends Component {
     super(props);
     this.state = {
       stackIdAddCandidate: null,
-      stackIdAddOrganizer: null
+      stackIdAddOrganizer: null,
+      stackIdEndPreparation: null
     }
   }
 
@@ -114,7 +115,13 @@ class PreparationOrganizer extends Component {
   }
 
   handleEndPreparationPhase() {
-    console.log("End preparation phase");
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.endPreparation.cacheSend(
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({ stackIdEndPreparation: stackId });
   }
 
   render() {
@@ -127,6 +134,7 @@ class PreparationOrganizer extends Component {
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddCandidate} />
         <Divider />
         <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndPreparation} />
       </div>
     );
   }
