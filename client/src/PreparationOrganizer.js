@@ -49,11 +49,21 @@ function EndPreparationPhase(props) {
   );
 }
 
+function AddCandidateTxStatus(props) {
+  const {transactions, transactionStack} = props.drizzleState;
+  const txHash = transactionStack[props.stackId];
+  if (!txHash || !transactions[txHash]) return null;
+  console.log(transactions[txHash]);
+  return (
+    `Transaction Status: ${transactions[txHash].status}`
+  );
+}
+
 class PreparationOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      
+      stackIdAddCandidate: null
     }
   }
 
@@ -61,8 +71,15 @@ class PreparationOrganizer extends Component {
     console.log("Add organizer : " + publicAddress);
   }
 
-  handleAddCandidate(candidateInfo) {
-    console.log("Add candidate : " + candidateInfo);
+  handleAddCandidate(candidateName) {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.addCandidate.cacheSend(
+      candidateName,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({ stackIdAddCandidate: stackId });
   }
 
   handleEndPreparationPhase() {
@@ -73,7 +90,8 @@ class PreparationOrganizer extends Component {
     return (
       <div>
         <AddOrganizer onClick={(publicAddress) => this.handleAddOrganizer(publicAddress)} />
-        <AddCandidate onClick={(candidateInfo) => this.handleAddCandidate(candidateInfo)} />
+        <AddCandidate onClick={(candidateName) => this.handleAddCandidate(candidateName)} />
+        <AddCandidateTxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddCandidate} />
         <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} />
       </div>
     );
