@@ -1,20 +1,40 @@
 import React, { Component, useState } from "react";
-import { Button, Input } from 'semantic-ui-react';
+import { Button, Divider, Input } from 'semantic-ui-react';
 
 function AddOrganizer(props) {
-  const [value, setValue] = useState('');
+  const [address, setAddress] = useState('');
+  const [name, setName] = useState('');
+  const [N, setN] = useState('');
+  const [E, setE] = useState('');
 
   return (
     <div>
       <Input
         fluid
-        action={{
-          content: 'Add New Organizer',
-          onClick: () => props.onClick(value)
-        }}
-        placeholder='New Organizer public address...'
-        onChange={(e) => setValue(e.target.value)}
+        placeholder='New Organizer Address...'
+        onChange={(e) => setAddress(e.target.value)}
       />
+      <Input
+        fluid
+        placeholder='New Organizer Name...'
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Input
+        fluid
+        placeholder='New Organizer Sign Key N...'
+        onChange={(e) => setN(e.target.value)}
+      />
+      <Input
+        fluid
+        placeholder='New Organizer Sign Key E...'
+        onChange={(e) => setE(e.target.value)}
+      />
+      <Button
+        primary
+        onClick={(e) => props.onClick(address, name, N, E)}
+        content="Add New Organizer"
+      />
+      <br />
       <br />
     </div>
   );
@@ -49,7 +69,7 @@ function EndPreparationPhase(props) {
   );
 }
 
-function AddCandidateTxStatus(props) {
+function TxStatus(props) {
   const {transactions, transactionStack} = props.drizzleState;
   const txHash = transactionStack[props.stackId];
   if (!txHash || !transactions[txHash]) return null;
@@ -63,12 +83,23 @@ class PreparationOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      stackIdAddCandidate: null
+      stackIdAddCandidate: null,
+      stackIdAddOrganizer: null
     }
   }
 
-  handleAddOrganizer(publicAddress) {
-    console.log("Add organizer : " + publicAddress);
+  handleAddOrganizer(address, name, N, E) {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.addOrganizer.cacheSend(
+      address,
+      name,
+      N,
+      E,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({ stackIdAddOrganizer: stackId });
   }
 
   handleAddCandidate(candidateName) {
@@ -89,9 +120,12 @@ class PreparationOrganizer extends Component {
   render() {
     return (
       <div>
-        <AddOrganizer onClick={(publicAddress) => this.handleAddOrganizer(publicAddress)} />
+        <AddOrganizer onClick={(address, name, N, E) => this.handleAddOrganizer(address, name, N, E)} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddOrganizer} />
+        <Divider />
         <AddCandidate onClick={(candidateName) => this.handleAddCandidate(candidateName)} />
-        <AddCandidateTxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddCandidate} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddCandidate} />
+        <Divider />
         <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} />
       </div>
     );
