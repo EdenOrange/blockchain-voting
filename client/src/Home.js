@@ -97,6 +97,7 @@ class Home extends Component {
       dataKeyCandidates: null,
       dataKeyCandidateIds: null,
       dataKeyCandidateCount: null,
+      candidates: null,
       votingContract: {
         status: "Preparation",
         result: "Voting result",
@@ -146,13 +147,22 @@ class Home extends Component {
 
     const candidateCount = VotingContract.candidateCount[this.state.dataKeyCandidateCount];
     let dataKeyCandidateIds = [];
+    if (this.state.dataKeyCandidateIds && parseInt(candidateCount.value) !== this.state.dataKeyCandidateIds.length) {
+      // There is a change in candidateCount, reset dataKeys
+      this.setState({
+        dataKeyCandidates: null,
+        dataKeyCandidateIds: null,
+        candidates: null
+      })
+    }
     if (candidateCount && this.state.dataKeyCandidateIds == null) {
       for (let i = 0; i < candidateCount.value; i++) {
         dataKeyCandidateIds.push(contract.methods.candidateIds.cacheCall(i));
       }
       this.setState({ dataKeyCandidateIds: dataKeyCandidateIds });
     }
-    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates === prevState.dataKeyCandidates) {
+    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null && VotingContract.candidateIds[this.state.dataKeyCandidateIds[this.state.dataKeyCandidateIds.length-1]]) {
+      // Only do this if all dataKeyCandidateIds are already loaded
       let dataKeyCandidates = [];
       for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
         const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
@@ -161,9 +171,19 @@ class Home extends Component {
         }
       }
 
-      if (dataKeyCandidates.length > 0) {
-        this.setState({ dataKeyCandidates: dataKeyCandidates });
+      this.setState({ dataKeyCandidates: dataKeyCandidates });
+    }
+    else if (this.state.dataKeyCandidates && this.state.candidates == null && VotingContract.candidates[this.state.dataKeyCandidates[this.state.dataKeyCandidates.length-1]]) {
+      // Only do this if all dataKeyCandidates are already loaded
+      let candidates = [];
+      for (const dataKeyCandidate of this.state.dataKeyCandidates) {
+        const candidate = VotingContract.candidates[dataKeyCandidate];
+        if (candidate) {
+          candidates.push(candidate);
+        }
       }
+
+      this.setState({ candidates: candidates });
     }
   }
 
@@ -171,21 +191,11 @@ class Home extends Component {
     const {VotingContract} = this.props.drizzleState.contracts;
     const status = VotingContract.state[this.state.dataKeyStatus];
 
-    let candidates = [];
-    if (this.state.dataKeyCandidates) {
-      for (const dataKeyCandidate of this.state.dataKeyCandidates) {
-        const candidate = VotingContract.candidates[dataKeyCandidate];
-        if (candidate) {
-          candidates.push(candidate);
-        }
-      }
-    }
-
     return (
       <div>
         <VotingContractInfo votingContract={this.state.votingContract} votingStatus={status} />
         <Divider />
-        <CandidatesList candidates={candidates} />
+        <CandidatesList candidates={this.state.candidates ? this.state.candidates : []} />
         <Divider />
         <VotersList voters={this.state.votingContract.voters} />
       </div>
