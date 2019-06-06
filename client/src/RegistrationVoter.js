@@ -1,6 +1,7 @@
 import React, { Component, useState } from "react";
 import { Button, Input } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
+import TxStatus from './TxStatus';
 
 function RegisterVoter(props) {
   const [name, setName] = useState('');
@@ -21,7 +22,6 @@ function RegisterVoter(props) {
       />
       <br />
       <Button primary onClick={() => props.onClick({
-        address: getAccountAddress(),
         name: name,
         NIK: NIK
       })}>
@@ -31,30 +31,32 @@ function RegisterVoter(props) {
   );
 }
 
-function getAccountAddress() {
-  return 'Account Address';
-}
-
 class RegistrationVoter extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      
+      stackIdRegisterRequest: null
     }
   }
 
   handleRegisterVoter(voterInfo) {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
     let hashedNIK = Utils.soliditySha3(voterInfo.NIK);
-    console.log(`Register voter : \n\t
-      Address : ${voterInfo.address} \n\t
-      Name : ${voterInfo.name} \n\t
-      Hashed NIK : ${hashedNIK}`);
+    const stackId = contract.methods.registerRequest.cacheSend(
+      voterInfo.name,
+      hashedNIK,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({ stackIdRegisterRequest: stackId });
   }
 
   render() {
     return (
       <div>
-        <RegisterVoter onClick={(voterInfo) => this.handleRegisterVoter(voterInfo)}/>
+        <RegisterVoter onClick={(voterInfo) => this.handleRegisterVoter(voterInfo)} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterRequest} />
       </div>
     );
   }
