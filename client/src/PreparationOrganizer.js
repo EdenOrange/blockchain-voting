@@ -1,5 +1,6 @@
 import React, { Component, useState } from "react";
 import { Button, Divider, Input } from 'semantic-ui-react';
+import TxStatus from './TxStatus';
 
 function AddOrganizer(props) {
   const [address, setAddress] = useState('');
@@ -66,16 +67,6 @@ function EndPreparationPhase(props) {
         End Preparation Phase
       </Button>
     </div>
-  );
-}
-
-function TxStatus(props) {
-  const {transactions, transactionStack} = props.drizzleState;
-  const txHash = transactionStack[props.stackId];
-  if (!txHash || !transactions[txHash]) return null;
-  console.log(transactions[txHash]);
-  return (
-    `Transaction Status: ${transactions[txHash].status}`
   );
 }
 
