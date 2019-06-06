@@ -44,6 +44,15 @@ contract VotingContract {
     address[] public voterAddresses;
     uint256 public voterCount;
 
+    struct RegisterRequest {
+        address registrarAddress;
+        string name;
+        bool exists;
+    }
+    mapping(bytes32 => RegisterRequest) public registerRequests; // bytes32 hashedNIK to RegisterRequest
+    bytes32[] public registers;
+    uint256 public registerCount;
+
     struct BlindSigRequest {
         address requester;
         address signer;
@@ -138,6 +147,38 @@ contract VotingContract {
         );
         organizerAddresses.push(organizerAddress);
         organizerCount++;
+    }
+
+    function registerRequest(
+        string memory name,
+        bytes32 hashedNIK
+    )
+        public
+    {
+        require(state == State.Registration, "State is not registration");
+        require(!registerRequests[hashedNIK].exists, "Register request already exists");
+        registerRequests[hashedNIK] = RegisterRequest(msg.sender, name, true);
+        registers.push(hashedNIK);
+        registerCount++;
+    }
+
+    function register(
+        uint256 index,
+        bytes32 hashedNIK
+    )
+        public
+        onlyOrganizer
+    {
+        require(state == State.Registration, "State is not registration");
+        require(index < registers.length, "Index out of array bounds");
+        require(registers[index] == hashedNIK, "Wrong register index");
+        require(registerRequests[hashedNIK].exists, "Register request does not exist");
+        registerRequests[hashedNIK].exists = false;
+        // "Delete" registers array at index by swapping the last element
+        registers[index] = registers[registers.length-1];
+        delete registers[registers.length-1];
+        registers.length--;
+        registerCount--;
     }
 
     function addVoter(
