@@ -156,15 +156,18 @@ contract VotingContract {
         public
     {
         require(state == State.Registration, "State is not registration");
+        require(!voters[msg.sender].exists, "Voter is already registered");
         require(!registerRequests[hashedNIK].exists, "Register request already exists");
         registerRequests[hashedNIK] = RegisterRequest(msg.sender, name, true);
         registers.push(hashedNIK);
         registerCount++;
     }
 
-    function register(
+    function registerVoter(
         uint256 index,
-        bytes32 hashedNIK
+        bytes32 hashedNIK,
+        address voterAddress,
+        string memory name
     )
         public
         onlyOrganizer
@@ -179,26 +182,8 @@ contract VotingContract {
         delete registers[registers.length-1];
         registers.length--;
         registerCount--;
-    }
 
-    function addVoter(
-        address voterAddress,
-        string memory name
-    )
-        public
-        onlyOrganizer
-    {
-        require(state == State.Registration, "State is not registration");
-        require(!voters[voterAddress].exists, "Voter is already registered");
-        voters[voterAddress] = Voter(
-            name,
-            uint256(0),
-            uint256(0),
-            address(0),
-            true
-        );
-        voterAddresses.push(voterAddress);
-        voterCount++;
+        addVoter(voterAddress, name);
     }
 
     function requestBlindSig(
@@ -300,6 +285,25 @@ contract VotingContract {
     }
     // internal
     // private
+    function addVoter(
+        address voterAddress,
+        string memory name
+    )
+        private
+    {
+        require(state == State.Registration, "State is not registration");
+        require(!voters[voterAddress].exists, "Voter is already registered");
+        voters[voterAddress] = Voter(
+            name,
+            uint256(0),
+            uint256(0),
+            address(0),
+            true
+        );
+        voterAddresses.push(voterAddress);
+        voterCount++;
+    }
+
     function verifyBlindSig(
         uint256 unblinded,
         uint256 N,
