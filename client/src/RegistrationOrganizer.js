@@ -1,10 +1,17 @@
-import React, { Component, useState } from "react";
+import React, { Component } from "react";
 import { Button, Header, Input, List, Modal } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
+import TxStatus from './TxStatus';
 
 function VoterRegistrationRequests(props) {
   const {requests, handleRegisterVoter} = props;
-  const Requests = requests.map((request) => VoterRegistrationRequest(request, handleRegisterVoter));
+  const Requests = requests.map((request) => 
+    <VoterRegistrationRequest 
+      request={request} 
+      handleRegisterVoter={handleRegisterVoter}
+      key={request.hashedNIK}
+    />
+  );
 
   return (
     <List divided>
@@ -13,117 +20,199 @@ function VoterRegistrationRequests(props) {
   )
 }
 
-function VoterRegistrationRequest(request, registerCallback) {
-  const [, setNIK] = useState('');
-  const [hashedNIK, setHashedNIK] = useState('');
-  let disableRegister = hashedNIK !== request.hashedNIK;
-  let handleChangeNIK = (value) => {
-    setHashedNIK(value !== '' && Utils.soliditySha3(value));
-    disableRegister = hashedNIK !== request.hashedNIK;
+class VoterRegistrationRequest extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      NIK: '',
+      hashedNIK: '',
+      modalOpen: false
+    }
   }
 
-  const [modalOpen, setModalOpen] = useState(false);
-  let handleOpen = () => setModalOpen(true);
-  let handleClose = () => {
-    setModalOpen(false);
-    setNIK('');
-    setHashedNIK('');
-  };;
+  render() {
+    const {request, handleRegisterVoter} = this.props;
+    const {hashedNIK} = this.state;
 
-  return (
-    <List.Item key={request.address}>
-      <List.Content floated='right'>
-        <Modal
-          trigger={<Button primary onClick={handleOpen}>Register Voter</Button>}
-          open={modalOpen}
-          onClose={handleClose}
-        >
-          <Modal.Header>
-            Confirm NIK
-          </Modal.Header>
-          <Modal.Content>
-            <Modal.Description>
-              <Header>
-                Name
-              </Header>
-              {request.name}
-              <Header>
-                Voter hashed NIK
-              </Header>
-              {request.hashedNIK}
-            </Modal.Description>
-            <br />
-            <br />
-            <Input
-              fluid
-              placeholder='NIK...'
-              onChange={(e) => {setNIK(e.target.value); handleChangeNIK(e.target.value)}}
-            />
-            <br />
-            <Modal.Description>
-              <Header>
-                Hashed NIK result
-              </Header>
-              {hashedNIK}
-            </Modal.Description>
-          </Modal.Content>
-          <Modal.Actions>
-            <Button primary disabled={disableRegister} onClick={() => {registerCallback(request); handleClose()}}>
-              Register
-            </Button>
-            <Button negative onClick={handleClose}>
-              Cancel
-            </Button>
-          </Modal.Actions>
-        </Modal>
-      </List.Content>
-      <List.Content>
-        <List.Item>
-          {request.name}
-        </List.Item>
-        <List.Item>
-          Address : {request.address}
-        </List.Item>
-        <List.Item>
-          HashedNIK : {request.hashedNIK}
-        </List.Item>
-      </List.Content>
-    </List.Item>
-  );
+    let disableRegister = hashedNIK !== request.hashedNIK;
+    let handleChangeNIK = (value) => {
+      this.setState({
+        hashedNIK: value !== '' && Utils.soliditySha3(value)
+      });
+      disableRegister = hashedNIK !== request.hashedNIK;
+    }
+
+    let handleOpen = () => {
+      this.setState({ modalOpen: true });
+    }
+    let handleClose = () => {
+      this.setState({
+        modalOpen: false,
+        NIK: '',
+        hashedNIK: ''
+      });
+    };;
+
+    return (
+      <List.Item>
+        <List.Content floated='right'>
+          <Modal
+            trigger={<Button primary onClick={handleOpen}>Register Voter</Button>}
+            open={this.state.modalOpen}
+            onClose={handleClose}
+          >
+            <Modal.Header>
+              Confirm NIK
+            </Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                <Header>
+                  Name
+                </Header>
+                {request.name}
+                <Header>
+                  Voter hashed NIK
+                </Header>
+                {request.hashedNIK}
+              </Modal.Description>
+              <br />
+              <br />
+              <Input
+                fluid
+                placeholder='NIK...'
+                onChange={(e) => {this.setState({ NIK: e.target.value }); handleChangeNIK(e.target.value)}}
+              />
+              <br />
+              <Modal.Description>
+                <Header>
+                  Hashed NIK result
+                </Header>
+                {hashedNIK}
+              </Modal.Description>
+            </Modal.Content>
+            <Modal.Actions>
+              <Button primary disabled={disableRegister} onClick={() => {handleRegisterVoter(request); handleClose()}}>
+                Register
+              </Button>
+              <Button negative onClick={handleClose}>
+                Cancel
+              </Button>
+            </Modal.Actions>
+          </Modal>
+        </List.Content>
+        <List.Content>
+          <List.Item>
+            {request.name}
+          </List.Item>
+          <List.Item>
+            Address : {request.address}
+          </List.Item>
+          <List.Item>
+            HashedNIK : {request.hashedNIK}
+          </List.Item>
+        </List.Content>
+      </List.Item>
+    );
+  }
 }
 
 class RegistrationOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      requests: [
-        {
-          address: '0xAddress001',
-          name: 'Name1',
-          hashedNIK: '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
-        },
-        {
-          address: '0xAddress002',
-          name: 'Name123',
-          hashedNIK: '0x5569044719a1ec3b04d0afa9e7a5310c7c0473331d13dc9fafe143b2c4e8148a'
-        },
-        {
-          address: '0xAddress003',
-          name: 'NameAs Df',
-          hashedNIK: '0xeeb1894b9a65d7d3d57e261a351b0e61bbc133a6627c74fb4cc75d7e5bf913d6'
-        }
-      ]
+      dataKeyRegisterRequests: null,
+      dataKeyRegisters: null,
+      dataKeyRegisterCount: null,
+      registerRequests: null,
+      stackIdRegisterVoter: null
+    }
+    this.handleRegisterVoter = this.handleRegisterVoter.bind(this);
+  }
+
+  componentDidMount() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const dataKeyRegisterCount = contract.methods.registerCount.cacheCall();
+    this.setState({
+      dataKeyRegisterCount
+    });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = this.props.drizzleState.contracts;
+
+    const registerCount = VotingContract.registerCount[this.state.dataKeyRegisterCount];
+    let dataKeyRegisters = [];
+    if (this.state.dataKeyRegisters && parseInt(registerCount.value) !== this.state.dataKeyRegisters.length) {
+      // There is a change in registerCount, reset dataKeys
+      this.setState({
+        dataKeyRegisterRequests: null,
+        dataKeyRegisters: null,
+        registerRequests: null
+      })
+    }
+    else if (registerCount && this.state.dataKeyRegisters == null) {
+      for (let i = 0; i < registerCount.value; i++) {
+        dataKeyRegisters.push(contract.methods.registers.cacheCall(i));
+      }
+      this.setState({ dataKeyRegisters: dataKeyRegisters });
+    }
+    else if (this.state.dataKeyRegisters && this.state.dataKeyRegisterRequests == null && VotingContract.registers[this.state.dataKeyRegisters[this.state.dataKeyRegisters.length-1]]) {
+      // Only do this if all dataKeyRegisters are already loaded
+      let dataKeyRegisterRequests = [];
+      for (const dataKeyRegisterRequest of this.state.dataKeyRegisters) {
+        const registerRequest = VotingContract.registers[dataKeyRegisterRequest];
+        dataKeyRegisterRequests.push(contract.methods.registerRequests.cacheCall(registerRequest.value));
+      }
+
+      this.setState({ dataKeyRegisterRequests: dataKeyRegisterRequests });
+    }
+    else if (this.state.dataKeyRegisterRequests && this.state.registerRequests == null && VotingContract.registerRequests[this.state.dataKeyRegisterRequests[this.state.dataKeyRegisterRequests.length-1]]) {
+      // Only do this if all dataKeyRegisterRequests are already loaded
+      let registerRequests = [];
+      for (let i = 0; i < this.state.dataKeyRegisterRequests.length; i++) {
+        const dataKeyRegisterRequest = this.state.dataKeyRegisterRequests[i];
+        const registerRequest = VotingContract.registerRequests[dataKeyRegisterRequest];
+
+        // Create register request object
+        registerRequests.push({
+          index: i,
+          address: registerRequest.value.registrarAddress,
+          name: registerRequest.value.name,
+          hashedNIK: registerRequest.args[0]
+        });
+      }
+      console.log(registerRequests);
+
+      this.setState({ registerRequests: registerRequests });
     }
   }
 
   handleRegisterVoter(request) {
-    console.log(`Register ${request.address}(${request.name}) as eligible voter`);
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+console.log(request);
+    const stackId = contract.methods.registerVoter.cacheSend(
+      request.index,
+      request.hashedNIK,
+      request.address,
+      request.name,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({
+      stackIdRegisterVoter: stackId
+    });
   }
 
   render() {
+    const {VotingContract} = this.props.drizzleState.contracts;
+
     return (
       <div>
-        <VoterRegistrationRequests requests={this.state.requests} handleRegisterVoter={this.handleRegisterVoter}/>
+        <VoterRegistrationRequests requests={this.state.registerRequests ? this.state.registerRequests : []} handleRegisterVoter={this.handleRegisterVoter}/>
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterVoter} />
       </div>
     );
   }

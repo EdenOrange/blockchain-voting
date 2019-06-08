@@ -140,7 +140,7 @@ class Home extends Component {
     });
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate() {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
     const {VotingContract} = this.props.drizzleState.contracts;
@@ -155,7 +155,7 @@ class Home extends Component {
         candidates: null
       })
     }
-    if (candidateCount && this.state.dataKeyCandidateIds == null) {
+    else if (candidateCount && this.state.dataKeyCandidateIds == null) {
       for (let i = 0; i < candidateCount.value; i++) {
         dataKeyCandidateIds.push(contract.methods.candidateIds.cacheCall(i));
       }
@@ -166,9 +166,7 @@ class Home extends Component {
       let dataKeyCandidates = [];
       for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
         const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
-        if (candidateId) {
-          dataKeyCandidates.push(contract.methods.candidates.cacheCall(candidateId.value));
-        }
+        dataKeyCandidates.push(contract.methods.candidates.cacheCall(candidateId.value));
       }
 
       this.setState({ dataKeyCandidates: dataKeyCandidates });
@@ -178,9 +176,7 @@ class Home extends Component {
       let candidates = [];
       for (const dataKeyCandidate of this.state.dataKeyCandidates) {
         const candidate = VotingContract.candidates[dataKeyCandidate];
-        if (candidate) {
-          candidates.push(candidate);
-        }
+        candidates.push(candidate);
       }
 
       this.setState({ candidates: candidates });
