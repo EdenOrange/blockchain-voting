@@ -106,7 +106,7 @@ contract VotingContract {
     }
 
     modifier onlyVoter {
-        require(voters[msg.sender].signer != address(0), "Not a voter");
+        require(voters[msg.sender].exists, "Not a voter");
         _;
     }
     // fallback function (if exists)
@@ -195,6 +195,7 @@ contract VotingContract {
     {
         require(state == State.Voting, "State is not voting");
         require(blindSigRequests[blinded].requester == address(0), "Blind exists");
+        require(voters[msg.sender].blinded == 0, "Voter already request blind signature before");
         blindSigRequests[blinded] = BlindSigRequest(
             msg.sender,
             signer,
