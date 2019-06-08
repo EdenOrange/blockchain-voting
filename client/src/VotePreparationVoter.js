@@ -9,7 +9,7 @@ function CandidatesChoices(props) {
     return candidateChoice.id === candidateId;
   }
   let onChoiceChange = (e, choice) => onChange(choice);
-  const Candidates = candidates.map((candidate) => CandidateChoice(candidate, isCandidateChecked(candidate.id), onChoiceChange));
+  const Candidates = candidates.map((candidate, index) => CandidateChoice(candidate, index, isCandidateChecked(index), onChoiceChange));
 
   return (
     <div>
@@ -18,7 +18,7 @@ function CandidatesChoices(props) {
       </Header>
       <Form>
         <Form.Field>
-          Selected value : <b>{candidateChoice.name}</b>
+          Selected candidate : <b>{candidateChoice.name}</b>
         </Form.Field>
         {Candidates}
       </Form>
@@ -26,13 +26,13 @@ function CandidatesChoices(props) {
   )
 }
 
-function CandidateChoice(candidate, isCandidateChecked, onChangeCallback) {
+function CandidateChoice(candidate, index, isCandidateChecked, onChangeCallback) {
   return (
-    <Form.Field key={candidate.id}>
+    <Form.Field key={index}>
       <Radio
-        label={candidate.name}
+        label={candidate.value.name}
         name='candidateChoiceGroup'
-        value={candidate.id}
+        value={index}
         checked={isCandidateChecked}
         onChange={onChangeCallback}
       />
@@ -112,6 +112,10 @@ class VotePreparationVoter extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      dataKeyCandidates: null,
+      dataKeyCandidateIds: null,
+      dataKeyCandidateCount: null,
+      candidates: null,
       votingContract: {
         status: "Preparation",
         result: "Voting result",
@@ -180,6 +184,60 @@ class VotePreparationVoter extends Component {
     }
   }
 
+  componentDidMount() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const dataKeyStatus = contract.methods.state.cacheCall();
+    const dataKeyCandidateCount = contract.methods.candidateCount.cacheCall();
+    this.setState({
+      dataKeyStatus,
+      dataKeyCandidateCount
+    });
+  }
+
+  componentDidUpdate() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = this.props.drizzleState.contracts;
+
+    const candidateCount = VotingContract.candidateCount[this.state.dataKeyCandidateCount];
+    let dataKeyCandidateIds = [];
+    if (this.state.dataKeyCandidateIds && parseInt(candidateCount.value) !== this.state.dataKeyCandidateIds.length) {
+      // There is a change in candidateCount, reset dataKeys
+      this.setState({
+        dataKeyCandidates: null,
+        dataKeyCandidateIds: null,
+        candidates: null
+      })
+    }
+    else if (candidateCount && this.state.dataKeyCandidateIds == null) {
+      for (let i = 0; i < candidateCount.value; i++) {
+        dataKeyCandidateIds.push(contract.methods.candidateIds.cacheCall(i));
+      }
+      this.setState({ dataKeyCandidateIds: dataKeyCandidateIds });
+    }
+    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null && VotingContract.candidateIds[this.state.dataKeyCandidateIds[this.state.dataKeyCandidateIds.length-1]]) {
+      // Only do this if all dataKeyCandidateIds are already loaded
+      let dataKeyCandidates = [];
+      for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
+        const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
+        dataKeyCandidates.push(contract.methods.candidates.cacheCall(candidateId.value));
+      }
+
+      this.setState({ dataKeyCandidates: dataKeyCandidates });
+    }
+    else if (this.state.dataKeyCandidates && this.state.candidates == null && VotingContract.candidates[this.state.dataKeyCandidates[this.state.dataKeyCandidates.length-1]]) {
+      // Only do this if all dataKeyCandidates are already loaded
+      let candidates = [];
+      for (const dataKeyCandidate of this.state.dataKeyCandidates) {
+        const candidate = VotingContract.candidates[dataKeyCandidate];
+        candidates.push(candidate);
+      }
+
+      this.setState({ candidates: candidates });
+    }
+  }
+
   handleChangeChoice = (choice) => {
     this.setState({
       choice: {
@@ -222,7 +280,7 @@ class VotePreparationVoter extends Component {
     return (
       <div>
         <CandidatesChoices
-          candidates={this.state.votingContract.candidates}
+          candidates={this.state.candidates ? this.state.candidates : []}
           candidateChoice={this.state.choice}
           onChange={this.handleChangeChoice}
         />
