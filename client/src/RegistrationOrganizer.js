@@ -184,7 +184,6 @@ class RegistrationOrganizer extends Component {
           hashedNIK: registerRequest.args[0]
         });
       }
-      console.log(registerRequests);
 
       this.setState({ registerRequests: registerRequests });
     }
@@ -193,7 +192,7 @@ class RegistrationOrganizer extends Component {
   handleRegisterVoter(request) {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
-console.log(request);
+
     const stackId = contract.methods.registerVoter.cacheSend(
       request.index,
       request.hashedNIK,
@@ -207,8 +206,6 @@ console.log(request);
   }
 
   render() {
-    const {VotingContract} = this.props.drizzleState.contracts;
-
     return (
       <div>
         <VoterRegistrationRequests requests={this.state.registerRequests ? this.state.registerRequests : []} handleRegisterVoter={this.handleRegisterVoter}/>
