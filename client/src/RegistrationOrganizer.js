@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Header, Input, List, Modal } from 'semantic-ui-react';
+import { Button, Divider, Header, Input, List, Modal } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
 import TxStatus from './TxStatus';
 
@@ -116,6 +116,16 @@ class VoterRegistrationRequest extends Component {
   }
 }
 
+function EndRegistrationPhase(props) {
+  return (
+    <div>
+      <Button primary onClick={() => props.onClick()}>
+        End Registration Phase
+      </Button>
+    </div>
+  );
+}
+
 class RegistrationOrganizer extends Component {
   constructor(props) {
     super(props);
@@ -124,7 +134,8 @@ class RegistrationOrganizer extends Component {
       dataKeyRegisters: null,
       dataKeyRegisterCount: null,
       registerRequests: null,
-      stackIdRegisterVoter: null
+      stackIdRegisterVoter: null,
+      stackIdEndRegistration: null
     }
     this.handleRegisterVoter = this.handleRegisterVoter.bind(this);
   }
@@ -205,11 +216,24 @@ class RegistrationOrganizer extends Component {
     });
   }
 
+  handleEndRegistrationPhase() {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.endRegistration.cacheSend(
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({ stackIdEndRegistration: stackId });
+  }
+
   render() {
     return (
       <div>
         <VoterRegistrationRequests requests={this.state.registerRequests ? this.state.registerRequests : []} handleRegisterVoter={this.handleRegisterVoter}/>
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterVoter} />
+        <Divider />
+        <EndRegistrationPhase onClick={() => this.handleEndRegistrationPhase()} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndRegistration} />
       </div>
     );
   }
