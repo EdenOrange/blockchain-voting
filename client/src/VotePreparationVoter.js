@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Button, Form, Header, Modal, Radio, TextArea } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
+import TxStatus from './TxStatus';
 
 function CandidatesChoices(props) {
   const {candidates, candidateChoice, onChange} = props;
@@ -115,7 +116,12 @@ class VotePreparationVoter extends Component {
       dataKeyCandidates: null,
       dataKeyCandidateIds: null,
       dataKeyCandidateCount: null,
+      dataKeyOrganizers: null,
+      dataKeyOrganizerAddresses: null,
+      dataKeyOrganizerCount: null,
+      stackIdRequestBlindSig: null,
       candidates: null,
+      organizers: null,
       votingContract: {
         status: "Preparation",
         result: "Voting result",
@@ -189,9 +195,11 @@ class VotePreparationVoter extends Component {
     const contract = drizzle.contracts.VotingContract;
     const dataKeyStatus = contract.methods.state.cacheCall();
     const dataKeyCandidateCount = contract.methods.candidateCount.cacheCall();
+    const dataKeyOrganizerCount = contract.methods.organizerCount.cacheCall();
     this.setState({
       dataKeyStatus,
-      dataKeyCandidateCount
+      dataKeyCandidateCount,
+      dataKeyOrganizerCount
     });
   }
 
@@ -236,6 +244,55 @@ class VotePreparationVoter extends Component {
 
       this.setState({ candidates: candidates });
     }
+
+    const organizerCount = VotingContract.organizerCount[this.state.dataKeyOrganizerCount];
+    let dataKeyOrganizerAddresses = [];
+    if (this.state.dataKeyOrganizerAddresses && parseInt(organizerCount.value) !== this.state.dataKeyOrganizerAddresses.length) {
+      // There is a change in organizerCount, reset dataKeys
+      this.setState({
+        dataKeyOrganizers: null,
+        dataKeyOrganizerAddresses: null,
+        organizers: null
+      })
+    }
+    else if (organizerCount && this.state.dataKeyOrganizerAddresses == null) {
+      for (let i = 0; i < organizerCount.value; i++) {
+        dataKeyOrganizerAddresses.push(contract.methods.organizerAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
+    }
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+      // Only do this if all dataKeyOrganizerAddresses are already loaded
+      let dataKeyOrganizers = [];
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        dataKeyOrganizers.push(contract.methods.organizers.cacheCall(organizerAddress.value));
+      }
+
+      this.setState({ dataKeyOrganizers: dataKeyOrganizers });
+    }
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]]) {
+      // Only do this if all dataKeyOrganizers are already loaded
+      let organizers = [];
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        
+        // Create organizer object
+        organizers.push({
+          id: i,
+          address: organizer.args[0],
+          name: organizer.value.name,
+          blindSigKey: {
+            N: organizer.value.N,
+            E: organizer.value.E
+          }
+        });
+        
+      }
+
+      this.setState({ organizers: organizers });
+    }
   }
 
   handleChangeChoice = (choice) => {
@@ -250,7 +307,7 @@ class VotePreparationVoter extends Component {
   handleCreateBallot = () => {
     const voteString = createVoteStringFromChoiceId(this.state.choice.id);
     console.log("Vote string : " + voteString);
-    const organizers = this.state.votingContract.organizers;
+    const organizers = this.state.organizers;
     const randomOrganizer = organizers[Math.floor(Math.random() * organizers.length)];
     const {blinded, r} = BlindSignature.blind({
       message: Utils.soliditySha3(voteString),
@@ -264,17 +321,24 @@ class VotePreparationVoter extends Component {
       randomValue: r.toString(),
       modalOpen: true
     });
-
-    // Send blinded vote to VotingContract (including the organizer that will sign)
-    const message = {
-      requesterAddress: this.state.accountAddress,
-      organizerId: randomOrganizer.id,
-      blinded: blinded.toString()
-    }
-    console.log("Send : " + JSON.stringify(message));
+    this.sendBallot(randomOrganizer.address, blinded.toString());
   }
 
   handleModalOpen = (isModalOpen) => { this.setState({ modalOpen: isModalOpen }) }
+
+  sendBallot = (organizerAddress, blinded) => {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.requestBlindSig.cacheSend(
+      organizerAddress,
+      blinded,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({
+      stackIdRequestBlindSig: stackId
+    });
+  }
 
   render() {
     return (
@@ -286,6 +350,7 @@ class VotePreparationVoter extends Component {
         />
         <br />
         <CreateBallot disabled={this.state.choice.id === -1} onClick={this.handleCreateBallot} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRequestBlindSig} />
         <BallotCreatedModal
           open={this.state.modalOpen}
           openCallback={this.handleModalOpen}
