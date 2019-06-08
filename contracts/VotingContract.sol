@@ -204,6 +204,7 @@ contract VotingContract {
         blinds.push(blinded);
         blindCount++;
         voters[msg.sender].blinded = blinded;
+        voters[msg.sender].signer = signer;
     }
 
     function signBlindSigRequest(
