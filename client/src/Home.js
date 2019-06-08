@@ -40,7 +40,6 @@ function VotingResult(props) {
 
 function CandidatesList(props) {
   const {candidates} = props;
-  // console.log(candidates);
 
   const Candidates = candidates.map((candidate, index) => CandidateInfo(candidate, index));
 
@@ -97,35 +96,11 @@ class Home extends Component {
       dataKeyCandidates: null,
       dataKeyCandidateIds: null,
       dataKeyCandidateCount: null,
+      dataKeyVoters: null,
+      dataKeyVoterAddresses: null,
+      dataKeyVoterCount: null,
       candidates: null,
-      votingContract: {
-        status: "Preparation",
-        result: "Voting result",
-        candidates: [
-          {
-            id: '1',
-            name: 'Candidate1'
-          },
-          {
-            id: '2',
-            name: 'Candidate2'
-          }
-        ],
-        voters: [
-          {
-            address: '0xAddress001',
-            name: 'Name1'
-          },
-          {
-            address: '0xAddress002',
-            name: 'Name123'
-          },
-          {
-            address: '0xAddress003',
-            name: 'NameAs Df'
-          }
-        ]
-      }
+      voters: null
     }
   }
 
@@ -134,9 +109,11 @@ class Home extends Component {
     const contract = drizzle.contracts.VotingContract;
     const dataKeyStatus = contract.methods.state.cacheCall();
     const dataKeyCandidateCount = contract.methods.candidateCount.cacheCall();
+    const dataKeyVoterCount = contract.methods.voterCount.cacheCall();
     this.setState({
       dataKeyStatus,
-      dataKeyCandidateCount
+      dataKeyCandidateCount,
+      dataKeyVoterCount
     });
   }
 
@@ -181,6 +158,49 @@ class Home extends Component {
 
       this.setState({ candidates: candidates });
     }
+
+    const voterCount = VotingContract.voterCount[this.state.dataKeyVoterCount];
+    let dataKeyVoterAddresses = [];
+    if (this.state.dataKeyVoterAddresses && parseInt(voterCount.value) !== this.state.dataKeyVoterAddresses.length) {
+      // There is a change in voterCount, reset dataKeys
+      this.setState({
+        dataKeyVoters: null,
+        dataKeyVoterAddresses: null,
+        voters: null
+      })
+    }
+    else if (voterCount && this.state.dataKeyVoterAddresses == null) {
+      for (let i = 0; i < voterCount.value; i++) {
+        dataKeyVoterAddresses.push(contract.methods.voterAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyVoterAddresses: dataKeyVoterAddresses });
+    }
+    else if (this.state.dataKeyVoterAddresses && this.state.dataKeyVoters == null && VotingContract.voterAddresses[this.state.dataKeyVoterAddresses[this.state.dataKeyVoterAddresses.length-1]]) {
+      // Only do this if all dataKeyVoterAddresses are already loaded
+      let dataKeyVoters = [];
+      for (const dataKeyVoterAddress of this.state.dataKeyVoterAddresses) {
+        const voterAddress = VotingContract.voterAddresses[dataKeyVoterAddress];
+        dataKeyVoters.push(contract.methods.voters.cacheCall(voterAddress.value));
+      }
+
+      this.setState({ dataKeyVoters: dataKeyVoters });
+    }
+    else if (this.state.dataKeyVoters && this.state.voters == null && VotingContract.voters[this.state.dataKeyVoters[this.state.dataKeyVoters.length-1]]) {
+      // Only do this if all dataKeyVoters are already loaded
+      let voters = [];
+      for (let i = 0; i < this.state.dataKeyVoters.length; i++) {
+        const dataKeyVoter = this.state.dataKeyVoters[i];
+        const voter = VotingContract.voters[dataKeyVoter];
+
+        // Create voter object
+        voters.push({
+          address: voter.args[0],
+          name: voter.value.name
+        })
+      }
+
+      this.setState({ voters: voters });
+    }
   }
 
   render() {
@@ -193,7 +213,7 @@ class Home extends Component {
         <Divider />
         <CandidatesList candidates={this.state.candidates ? this.state.candidates : []} />
         <Divider />
-        <VotersList voters={this.state.votingContract.voters} />
+        <VotersList voters={this.state.voters ? this.state.voters : []} />
       </div>
     );
   }
