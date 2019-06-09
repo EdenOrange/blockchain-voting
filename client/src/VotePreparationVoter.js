@@ -122,71 +122,13 @@ class VotePreparationVoter extends Component {
       stackIdRequestBlindSig: null,
       candidates: null,
       organizers: null,
-      votingContract: {
-        status: "Preparation",
-        result: "Voting result",
-        candidates: [
-          {
-            id: '1',
-            name: 'Candidate1'
-          },
-          {
-            id: '2',
-            name: 'Candidate2'
-          }
-        ],
-        voters: [
-          {
-            address: '0xAddress001',
-            name: 'Name1'
-          },
-          {
-            address: '0xAddress002',
-            name: 'Name123'
-          },
-          {
-            address: '0xAddress003',
-            name: 'NameAs Df'
-          }
-        ],
-        organizers: [ // Organizer account
-          {
-            id: '1',
-            address: '0xAddressOrg001',
-            name: 'Org1',
-            blindSigKey: { // RSA keypair, D is private held by each organizer
-              N: '76371029918972468664941514738317813949700823831516674062130698696256739747471',
-              E: '65537'
-            }
-          },
-          {
-            id: '2',
-            address: '0xAddressOrg002',
-            name: 'Org2',
-            blindSigKey: {
-              N: '84363999601518293055825661401325254763629655239082503904477611930728364455689',
-              E: '65537'
-            }
-          },
-          {
-            id: '3',
-            address: '0xAddressOrg003',
-            name: 'Org3',
-            blindSigKey: {
-              N: '67478541602739783545562006148578430599142391044897235744290252182816844486133',
-              E: '65537'
-            }
-          }
-        ]
-      },
       choice: {
         id: -1,
         name: ''
       },
       voteString: '',
       randomValue: '',
-      modalOpen: false,
-      accountAddress: '0xAddress001'
+      modalOpen: false
     }
   }
 
@@ -277,7 +219,6 @@ class VotePreparationVoter extends Component {
       for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
         const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
         const organizer = VotingContract.organizers[dataKeyOrganizer];
-        
         // Create organizer object
         organizers.push({
           id: i,
@@ -288,9 +229,7 @@ class VotePreparationVoter extends Component {
             E: organizer.value.E
           }
         });
-        
       }
-
       this.setState({ organizers: organizers });
     }
   }
