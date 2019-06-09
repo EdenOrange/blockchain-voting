@@ -2,11 +2,12 @@ import React, { Component, useState } from "react";
 import { Button, Header, Form, Input, List, Modal, TextArea } from 'semantic-ui-react';
 import * as BlindSignature from './rsablind.js';
 import { BigInteger } from 'jsbn';
+import TxStatus from './TxStatus';
 
 function BlindSigRequests(props) {
-  const {requests, organizerId, handleSign} = props;
+  const {requests, organizerAddress, handleSign} = props;
   const Requests = requests.map((request) => {
-    if (request.organizerId === organizerId) {
+    if (request.organizerAddress === organizerAddress) {
       return BlindSigRequest(request, handleSign);
     }
     return null;
@@ -76,81 +77,135 @@ class VotePreparationOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      votingContract: {
-        blindSigRequests: [
-          {
-            requesterAddress: '0xAddress001',
-            organizerId: '2',
-            blinded: '60426752463516873348926488754445044242595969058904053657514082843526071481527'
-          },
-          {
-            requesterAddress: '0xAddress002',
-            organizerId: '3',
-            blinded: '2567123009865940580716339588244153997372504321992020692242420551839608271491'
-          },
-          {
-            requesterAddress: '0xAddress003',
-            organizerId: '1',
-            blinded: '71718673910107162727424259620988374895193573839558412358249900876057432719869'
-          },
-          {
-            requesterAddress: '0xAddress004',
-            organizerId: '3',
-            blinded: '62914212792489438301203135771726128897949536759588274508724916053533957197919'
-          },
-          {
-            requesterAddress: '0xAddress005',
-            organizerId: '1',
-            blinded: '14931406149964567040796113903350886229955003902462973945590388207327926513582'
-          }
-        ]
-      },
-      organizerId: '3', // Selected organizer account id
-      organizers: [ // Organizer account
-        {
-          id: '1',
-          address: '0xAddressOrg001',
-          name: 'Org1',
-          blindSigKey: { // RSA keypair
-            N: '76371029918972468664941514738317813949700823831516674062130698696256739747471',
-            E: '65537',
-            D: '3640433609516303646936498345095211113983443826289371183311928589560399269377'
-          }
-        },
-        {
-          id: '2',
-          address: '0xAddressOrg002',
-          name: 'Org2',
+      dataKeyBlindSigRequests: null,
+      dataKeyBlinds: null,
+      dataKeyBlindCount: null,
+      dataKeyOrganizers: null,
+      dataKeyOrganizerAddresses: null,
+      dataKeyOrganizerCount: null,
+      blindSigRequests: null,
+      organizers: null,
+      stackIdSignBlindSigRequest: null
+    }
+  }
+
+  componentDidMount() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const dataKeyBlindCount = contract.methods.blindCount.cacheCall();
+    const dataKeyOrganizerCount = contract.methods.organizerCount.cacheCall();
+    this.setState({
+      dataKeyBlindCount,
+      dataKeyOrganizerCount
+    });
+  }
+
+  componentDidUpdate() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = this.props.drizzleState.contracts;
+
+    const blindCount = VotingContract.blindCount[this.state.dataKeyBlindCount];
+    let dataKeyBlinds = [];
+    if (this.state.dataKeyBlinds && parseInt(blindCount.value) !== this.state.dataKeyBlinds.length) {
+      // There is a change in blindCount, reset dataKeys
+      this.setState({
+        dataKeyBlindSigRequests: null,
+        dataKeyBlinds: null,
+        blindSigRequests: null
+      })
+    }
+    else if (blindCount && this.state.dataKeyBlinds == null) {
+      for (let i = 0; i < blindCount.value; i++) {
+        dataKeyBlinds.push(contract.methods.blinds.cacheCall(i));
+      }
+      this.setState({ dataKeyBlinds: dataKeyBlinds });
+    }
+    else if (this.state.dataKeyBlinds && this.state.dataKeyBlindSigRequests == null && VotingContract.blinds[this.state.dataKeyBlinds[this.state.dataKeyBlinds.length-1]]) {
+      // Only do this if all dataKeyBlinds are already loaded
+      let dataKeyBlindSigRequests = [];
+      for (const dataKeyBlind of this.state.dataKeyBlinds) {
+        const blind = VotingContract.blinds[dataKeyBlind];
+        dataKeyBlindSigRequests.push(contract.methods.blindSigRequests.cacheCall(blind.value));
+      }
+
+      this.setState({ dataKeyBlindSigRequests: dataKeyBlindSigRequests });
+    }
+    else if (this.state.dataKeyBlindSigRequests && this.state.blindSigRequests == null && VotingContract.blindSigRequests[this.state.dataKeyBlindSigRequests[this.state.dataKeyBlindSigRequests.length-1]]) {
+      // Only do this if all dataKeyBlindSigRequests are already loaded
+      let blindSigRequests = [];
+      for (let i = 0; i < this.state.dataKeyBlindSigRequests.length; i++) {
+        const dataKeyBlindSigRequest = this.state.dataKeyBlindSigRequests[i];
+        const blindSigRequest = VotingContract.blindSigRequests[dataKeyBlindSigRequest];
+        // Create organizer object
+        blindSigRequests.push({
+          index: i,
+          requesterAddress: blindSigRequest.value.requester,
+          organizerAddress: blindSigRequest.value.signer,
+          blinded: blindSigRequest.args[0]
+        });
+      }
+      this.setState({ blindSigRequests: blindSigRequests });
+    }
+
+    const organizerCount = VotingContract.organizerCount[this.state.dataKeyOrganizerCount];
+    let dataKeyOrganizerAddresses = [];
+    if (this.state.dataKeyOrganizerAddresses && parseInt(organizerCount.value) !== this.state.dataKeyOrganizerAddresses.length) {
+      // There is a change in organizerCount, reset dataKeys
+      this.setState({
+        dataKeyOrganizers: null,
+        dataKeyOrganizerAddresses: null,
+        organizers: null
+      })
+    }
+    else if (organizerCount && this.state.dataKeyOrganizerAddresses == null) {
+      for (let i = 0; i < organizerCount.value; i++) {
+        dataKeyOrganizerAddresses.push(contract.methods.organizerAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
+    }
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+      // Only do this if all dataKeyOrganizerAddresses are already loaded
+      let dataKeyOrganizers = [];
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        dataKeyOrganizers.push(contract.methods.organizers.cacheCall(organizerAddress.value));
+      }
+
+      this.setState({ dataKeyOrganizers: dataKeyOrganizers });
+    }
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]]) {
+      // Only do this if all dataKeyOrganizers are already loaded
+      let organizers = [];
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        // Create organizer object
+        organizers.push({
+          id: i,
+          address: organizer.args[0],
+          name: organizer.value.name,
           blindSigKey: {
-            N: '84363999601518293055825661401325254763629655239082503904477611930728364455689',
-            E: '65537',
-            D: '70000609340234726308539353973216137887903167474133405247554605418248129942913'
+            N: organizer.value.N,
+            E: organizer.value.E
           }
-        },
-        {
-          id: '3',
-          address: '0xAddressOrg003',
-          name: 'Org3',
-          blindSigKey: {
-            N: '67478541602739783545562006148578430599142391044897235744290252182816844486133',
-            E: '65537',
-            D: '24327982376207876552398478436281965274337410239407425112681983207657454016145'
-          }
-        }
-      ]
+        });
+      }
+      this.setState({ organizers: organizers });
     }
   }
   
-  getCurrentOrganizerAccount = (organizerId) => {
-    return this.state.organizers.find(organizer => organizer.id === organizerId);
+  getCurrentOrganizerObject = () => {
+    const {drizzleState} = this.props;
+    return this.state.organizers.find(organizer => organizer.address === drizzleState.accounts[0]);
   }
 
   handleSign = (request, privateKey) => {
     console.log("Sign ballot " + request.blinded + " with privateKey : " + privateKey);
     const key = {
       keyPair: {
-        e: new BigInteger(this.getCurrentOrganizerAccount(this.state.organizerId).blindSigKey.E.toString()),
-        n: new BigInteger(this.getCurrentOrganizerAccount(this.state.organizerId).blindSigKey.N.toString()),
+        e: new BigInteger(this.getCurrentOrganizerObject().blindSigKey.E.toString()),
+        n: new BigInteger(this.getCurrentOrganizerObject().blindSigKey.N.toString()),
         d: new BigInteger(privateKey.toString())
       }
     }
@@ -159,19 +214,36 @@ class VotePreparationOrganizer extends Component {
       key: key
     });
     console.log("Signed : " + signed);
+    this.sendSigned(
+      request.index,
+      request.requesterAddress,
+      request.blinded,
+      signed.toString()
+    );
+  }
 
-    // Send signed vote to VotingContract
-    const message = {
-      requesterAddress: request.requesterAddress,
-      signed: signed.toString()
-    }
-    console.log("Send : " + JSON.stringify(message));
+  sendSigned = (index, requesterAddress, blinded, signed) => {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.signBlindSigRequest.cacheSend(
+      index,
+      requesterAddress,
+      blinded,
+      signed,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({
+      stackIdSignBlindSigRequest: stackId
+    });
   }
 
   render() {
+    const {drizzleState} = this.props;
     return (
       <div>
-        <BlindSigRequests requests={this.state.votingContract.blindSigRequests} organizerId={this.state.organizerId} handleSign={this.handleSign}/>
+        <BlindSigRequests requests={this.state.blindSigRequests ? this.state.blindSigRequests : []} organizerAddress={drizzleState.accounts[0]} handleSign={this.handleSign} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdSignBlindSigRequest} />
       </div>
     );
   }
