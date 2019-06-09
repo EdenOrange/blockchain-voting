@@ -9,7 +9,11 @@ import { Drizzle, generateStore } from 'drizzle';
 import VotingContract from './contracts/VotingContract.json';
 
 const options = {
-  contracts: [VotingContract]
+  contracts: [VotingContract],
+  polls: {
+    accounts: 1500,
+    blocks: 1500
+  }
 }
 const drizzleStore = generateStore(options);
 const drizzle = new Drizzle(options, drizzleStore);

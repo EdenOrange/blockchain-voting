@@ -1,11 +1,12 @@
 import React, { Component, useState } from "react";
-import { Button, Divider, Dropdown, Form, Header, Input, TextArea } from 'semantic-ui-react';
+import { Button, Divider, Form, Header, Input, TextArea } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
+import TxStatus from './TxStatus';
 
 function BallotSignedInfo(props) {
   const {voters, voterAccount} = props;
-  const voter = voters.find(voter => voter.address === voterAccount.address);
+  const voter = voters.find(voter => voter.address === voterAccount);
   
   if (voter === undefined) {
     return (
@@ -13,10 +14,11 @@ function BallotSignedInfo(props) {
         <Header>
           This account is not registered in voting
         </Header>
+        You may cast your vote from this account
       </div>
     )
   }
-  else if (voter.signed === '') {
+  else if (voter.signed === '0') {
     return (
       <div>
         <Header>
@@ -32,42 +34,37 @@ function BallotSignedInfo(props) {
           Organizer has signed your Ballot
         </Header>
         Your voter address : {voter.address}
+        <br />
+        Your signed ballot : {voter.signed}
+        <br />
+        Please use another account to cast your vote
       </div>
     )
   }
 }
 
-function AccountsList(props) {
-  const {accounts, selectedAccount, handleSelectedAccount} = props;
-  const accountsList = accounts.map((account, index) => ({
-    key: index,
-    value: index,
-    text: account.address
-  }));
-
-  return (
-    <div>
-      <Header>
-        Select an account to cast vote from
-      </Header>
-      <Dropdown
-        defaultValue={selectedAccount}
-        fluid
-        selection
-        options={accountsList}
-        onChange={(e, {value}) => handleSelectedAccount(value)}
-      />
-    </div>
-  )
-}
-
 function CastVote(props) {
-  const {handleCastVote} = props;
+  const {isAccountRegistered, handleCastVote, drizzleState} = props;
+  const [voterAddress, setVoterAddress] = useState('');
   const [voteString, setVoteString] = useState('');
   const [randomValue, setRandomValue] = useState('');
 
+  if (isAccountRegistered(drizzleState.accounts[0])) {
+    return (
+      <div></div>
+    );
+  }
+
   return (
     <div>
+      <Divider />
+      <br />
+      <Input
+        fluid
+        placeholder='Voter address...'
+        onChange={(e) => setVoterAddress(e.target.value)}
+      />
+      {isAccountRegistered(voterAddress) ? <p style={{color:'green'}}>Valid address</p> : <p style={{color:'red'}}>Invalid address</p>}
       <br />
       <Input
         fluid
@@ -83,7 +80,11 @@ function CastVote(props) {
       </Form>
       <br />
       <br />
-      <Button primary disabled={voteString === '' || randomValue === ''} onClick={() => handleCastVote(voteString, randomValue)}>
+      <Button
+        primary
+        disabled={voterAddress === '' || voteString === '' || randomValue === '' || !isAccountRegistered(voterAddress)}
+        onClick={() => handleCastVote(voterAddress, voteString, randomValue)}
+      >
         Cast Vote!
       </Button>
     </div>
@@ -94,109 +95,139 @@ class VoteCastingVoter extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      votingContract: {
-        voters: [
-          {
-            address: '0xAddress001',
-            name: 'Name1',
-            blinded: '60426752463516873348926488754445044242595969058904053657514082843526071481527',
-            signed: '76815247291987702809329430016440520290348748523617982221786994675505864771817',
-            organizerSignerId: '2'
-          },
-          {
-            address: '0xAddress002',
-            blinded: '2567123009865940580716339588244153997372504321992020692242420551839608271491',
-            signed: '40475393562802698418956301273911487135011690134550800805109750610319574995399',
-            organizerSignerId: '3'
-          },
-          {
-            address: '0xAddress003',
-            blinded: '71718673910107162727424259620988374895193573839558412358249900876057432719869',
-            signed: '46688078332120474924105756899278368575502504013209392081942692426667400001502',
-            organizerSignerId: '1'
-          },
-          {
-            address: '0xAddress004',
-            blinded: '62914212792489438301203135771726128897949536759588274508724916053533957197919',
-            signed: '67367023678296148522332179618119911418780824786864936805093780738986830987986',
-            organizerSignerId: '3'
-          },
-          {
-            address: '0xAddress005',
-            blinded: '14931406149964567040796113903350886229955003902462973945590388207327926513582',
-            signed: '42798761570759785510353313481211507910639282983313031446259167970300318638564',
-            organizerSignerId: '1'
-          }
-        ],
-        organizers: [ // Organizer account
-          {
-            id: '1',
-            address: '0xAddressOrg001',
-            name: 'Org1',
-            blindSigKey: { // RSA keypair
-              N: '76371029918972468664941514738317813949700823831516674062130698696256739747471',
-              E: '65537'
-            }
-          },
-          {
-            id: '2',
-            address: '0xAddressOrg002',
-            name: 'Org2',
-            blindSigKey: {
-              N: '84363999601518293055825661401325254763629655239082503904477611930728364455689',
-              E: '65537'
-            }
-          },
-          {
-            id: '3',
-            address: '0xAddressOrg003',
-            name: 'Org3',
-            blindSigKey: {
-              N: '67478541602739783545562006148578430599142391044897235744290252182816844486133',
-              E: '65537'
-            }
-          }
-        ]
-      },
-      accounts: [
-        {
-          address: '0xAddress001'
-        },
-        {
-          address: '0xAddress002'
-        },
-        {
-          address: '0xAddress003'
-        },
-        {
-          address: '0xAddress004'
-        },
-        {
-          address: '0xAddress005'
-        },
-        {
-          address: '0xAddress101'
-        },
-        {
-          address: '0xAddress102'
-        },
-        {
-          address: '0xAddress103'
-        },
-        {
-          address: '0xAddress104'
-        },
-        {
-          address: '0xAddress105'
-        }
-      ],
-      voterAccount: 3, // Selected wallet account
-      selectedAccount: 0 // Another account to be cast vote anonymously
+      dataKeyVoters: null,
+      dataKeyVoterAddresses: null,
+      dataKeyVoterCount: null,
+      dataKeyOrganizers: null,
+      dataKeyOrganizerAddresses: null,
+      dataKeyOrganizerCount: null,
+      voters: null,
+      organizers: null,
+      stackIdVote: null
     }
   }
 
+  componentDidMount() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const dataKeyVoterCount = contract.methods.voterCount.cacheCall();
+    const dataKeyOrganizerCount = contract.methods.organizerCount.cacheCall();
+    this.setState({
+      dataKeyVoterCount,
+      dataKeyOrganizerCount
+    });
+  }
+
+  componentDidUpdate() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = this.props.drizzleState.contracts;
+
+    const voterCount = VotingContract.voterCount[this.state.dataKeyVoterCount];
+    let dataKeyVoterAddresses = [];
+    if (this.state.dataKeyVoterAddresses && parseInt(voterCount.value) !== this.state.dataKeyVoterAddresses.length) {
+      // There is a change in voterCount, reset dataKeys
+      this.setState({
+        dataKeyVoters: null,
+        dataKeyVoterAddresses: null,
+        voters: null
+      })
+    }
+    else if (voterCount && this.state.dataKeyVoterAddresses == null) {
+      for (let i = 0; i < voterCount.value; i++) {
+        dataKeyVoterAddresses.push(contract.methods.voterAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyVoterAddresses: dataKeyVoterAddresses });
+    }
+    else if (this.state.dataKeyVoterAddresses && this.state.dataKeyVoters == null && VotingContract.voterAddresses[this.state.dataKeyVoterAddresses[this.state.dataKeyVoterAddresses.length-1]]) {
+      // Only do this if all dataKeyVoterAddresses are already loaded
+      let dataKeyVoters = [];
+      for (const dataKeyVoterAddress of this.state.dataKeyVoterAddresses) {
+        const voterAddress = VotingContract.voterAddresses[dataKeyVoterAddress];
+        dataKeyVoters.push(contract.methods.voters.cacheCall(voterAddress.value));
+      }
+
+      this.setState({ dataKeyVoters: dataKeyVoters });
+    }
+    else if (this.state.dataKeyVoters && this.state.voters == null && VotingContract.voters[this.state.dataKeyVoters[this.state.dataKeyVoters.length-1]]) {
+      // Only do this if all dataKeyVoters are already loaded
+      let voters = [];
+      for (let i = 0; i < this.state.dataKeyVoters.length; i++) {
+        const dataKeyVoter = this.state.dataKeyVoters[i];
+        const voter = VotingContract.voters[dataKeyVoter];
+
+        // Create voter object
+        voters.push({
+          address: voter.args[0],
+          name: voter.value.name,
+          blinded: voter.value.blinded,
+          signed: voter.value.signed,
+          organizerAddress: voter.value.signer
+        })
+      }
+
+      this.setState({ voters: voters });
+    }
+
+    const organizerCount = VotingContract.organizerCount[this.state.dataKeyOrganizerCount];
+    let dataKeyOrganizerAddresses = [];
+    if (this.state.dataKeyOrganizerAddresses && parseInt(organizerCount.value) !== this.state.dataKeyOrganizerAddresses.length) {
+      // There is a change in organizerCount, reset dataKeys
+      this.setState({
+        dataKeyOrganizers: null,
+        dataKeyOrganizerAddresses: null,
+        organizers: null
+      })
+    }
+    else if (organizerCount && this.state.dataKeyOrganizerAddresses == null) {
+      for (let i = 0; i < organizerCount.value; i++) {
+        dataKeyOrganizerAddresses.push(contract.methods.organizerAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
+    }
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+      // Only do this if all dataKeyOrganizerAddresses are already loaded
+      let dataKeyOrganizers = [];
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        dataKeyOrganizers.push(contract.methods.organizers.cacheCall(organizerAddress.value));
+      }
+
+      this.setState({ dataKeyOrganizers: dataKeyOrganizers });
+    }
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]]) {
+      // Only do this if all dataKeyOrganizers are already loaded
+      let organizers = [];
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        // Create organizer object
+        organizers.push({
+          id: i,
+          address: organizer.args[0],
+          name: organizer.value.name,
+          blindSigKey: {
+            N: organizer.value.N,
+            E: organizer.value.E
+          }
+        });
+      }
+      this.setState({ organizers: organizers });
+    }
+  }
+
+  isAccountRegistered = (address) => {
+    if (!this.state.voters) {
+      return false;
+    }
+    const voter = this.state.voters.find(voter => voter.address === address);
+    // Only allow account to vote if it's not registered
+    return !(voter === undefined);
+  }
+
   getCurrentVoterAccount = () => {
-    return this.state.accounts[this.state.voterAccount];
+    const {drizzleState} = this.props;
+    return drizzleState.accounts[0];
   }
 
   handleSelectedAccount = (selectedAccount) => {
@@ -206,7 +237,7 @@ class VoteCastingVoter extends Component {
   }
 
   getUnblindedVote = (voter, randomValue) => {
-    const organizerSigner = this.state.votingContract.organizers.find(organizer => organizer.id === voter.organizerSignerId);
+    const organizerSigner = this.state.organizers.find(organizer => organizer.address === voter.organizerAddress);
     const unblinded = BlindSignature.unblind({
       signed: voter.signed,
       N: organizerSigner.blindSigKey.N,
@@ -216,12 +247,12 @@ class VoteCastingVoter extends Component {
     return unblinded;
   }
 
-  handleCastVote = (voteString, randomValue) => {
-    const voter = this.state.votingContract.voters.find(voter => voter.address === this.state.accounts[this.state.voterAccount].address);
+  handleCastVote = (voterAddress, voteString, randomValue) => {
+    const voter = this.state.voters.find(voter => voter.address === voterAddress);
     const unblinded = this.getUnblindedVote(voter, randomValue);
 
     // Verify if signature is correct before casting vote
-    const organizerSigner = this.state.votingContract.organizers.find(organizer => organizer.id === voter.organizerSignerId);
+    const organizerSigner = this.state.organizers.find(organizer => organizer.address === voter.organizerAddress);
     const isSignatureCorrect = BlindSignature.verify({
       unblinded: unblinded,
       N: organizerSigner.blindSigKey.N,
@@ -234,14 +265,7 @@ class VoteCastingVoter extends Component {
     console.log("Is Signature Correct : " + isSignatureCorrect);
 
     if (isSignatureCorrect) {
-      // Send cast vote to VotingContract
-      // IMPORTANT : Send using selectedAccount(anonymous), not voterAccount(registered)
-      const message = {
-        voteString: voteString,
-        unblinded: unblinded.toString(),
-        organizerId: voter.organizerSignerId
-      }
-      console.log("Send : " + JSON.stringify(message));
+      this.sendVote(voteString, unblinded.toString(), voter.organizerAddress);
     }
     else {
       // Handle signature error
@@ -249,13 +273,27 @@ class VoteCastingVoter extends Component {
     }
   }
 
+  sendVote = (voteString, unblinded, signer) => {
+    const {drizzle, drizzleState} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+
+    const stackId = contract.methods.vote.cacheSend(
+      voteString,
+      unblinded,
+      signer,
+      { from: drizzleState.accounts[0] }
+    );
+    this.setState({
+      stackIdVote: stackId
+    });
+  }
+
   render() {
     return (
       <div>
-        <BallotSignedInfo voters={this.state.votingContract.voters} voterAccount={this.getCurrentVoterAccount()} />
-        <Divider />
-        <AccountsList accounts={this.state.accounts} selectedAccount={this.state.selectedAccount} handleSelectedAccount={this.handleSelectedAccount} />
-        <CastVote handleCastVote={this.handleCastVote} />
+        <BallotSignedInfo voters={this.state.voters ? this.state.voters : []} voterAccount={this.getCurrentVoterAccount()} />
+        <CastVote isAccountRegistered={this.isAccountRegistered} handleCastVote={this.handleCastVote} drizzleState={this.props.drizzleState} />
+        <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdVote} />
       </div>
     );
   }
