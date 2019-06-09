@@ -56,7 +56,7 @@ contract VotingContract {
     struct BlindSigRequest {
         address requester;
         address signer;
-        bool signed;
+        bool exists;
     }
     mapping(uint256 => BlindSigRequest) public blindSigRequests;
     uint256[] public blinds;
@@ -199,7 +199,7 @@ contract VotingContract {
         blindSigRequests[blinded] = BlindSigRequest(
             msg.sender,
             signer,
-            false
+            true
         );
         blinds.push(blinded);
         blindCount++;
@@ -208,6 +208,7 @@ contract VotingContract {
     }
 
     function signBlindSigRequest(
+        uint256 index,
         address requester,
         uint256 blinded,
         uint256 signed
@@ -216,11 +217,17 @@ contract VotingContract {
         onlyOrganizer
     {
         require(state == State.Voting, "State is not voting");
-        require(blindSigRequests[blinded].requester != address(0), "Blind does not exist");
+        require(index < blinds.length, "Index out of array bounds");
+        require(blinds[index] == blinded, "Wrong blind index");
+        require(blindSigRequests[blinded].exists, "Blind sig request does not exist");
         require(blindSigRequests[blinded].signer == msg.sender, "Organizer is not the designated signer");
-        require(!blindSigRequests[blinded].signed, "Request is already signed");
-        blindSigRequests[blinded].signed = true;
         voters[requester].signed = signed;
+        blindSigRequests[blinded].exists = false;
+        // "Delete" blinds array at index by swapping the last element
+        blinds[index] = blinds[blinds.length-1];
+        delete blinds[blinds.length-1];
+        blinds.length--;
+        blindCount--;
     }
 
     function vote(
