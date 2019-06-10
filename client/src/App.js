@@ -14,6 +14,7 @@ import PreparationVoter from './PreparationVoter';
 import RegistrationVoter from './RegistrationVoter';
 import VotePreparationVoter from './VotePreparationVoter';
 import VoteCastingVoter from './VoteCastingVoter';
+import RSAGenerator from './RSAGenerator';
 import Test from './Test';
 
 class App extends Component {
@@ -64,6 +65,7 @@ class App extends Component {
                 <Menu.Item as={Link} to='/organizer/registration/'>Registration</Menu.Item>
                 <Menu.Item as={Link} to='/organizer/vote_preparation/'>Vote Preparation</Menu.Item>
                 <Menu.Item as={Link} to='/organizer/vote_counting/'>Vote Counting</Menu.Item>
+                <Menu.Item as={Link} to='/rsa_generator/'>RSA Generator</Menu.Item>
                 <Menu.Menu position='right'>
                   <Menu.Item>Organizer</Menu.Item>
                 </Menu.Menu>
@@ -116,6 +118,7 @@ class App extends Component {
                   />
                 )}
               />
+              <Route path="/rsa_generator" exact component={RSAGenerator} />
               <Route path="/test" exact component={Test} />
             </Container>
           </div>
@@ -133,6 +136,7 @@ class App extends Component {
                 <Menu.Item as={Link} to='/voter/registration/'>Registration</Menu.Item>
                 <Menu.Item as={Link} to='/voter/vote_preparation/'>Vote Preparation</Menu.Item>
                 <Menu.Item as={Link} to='/voter/vote_casting/'>Vote Casting</Menu.Item>
+                <Menu.Item as={Link} to='/rsa_generator/'>RSA Generator</Menu.Item>
                 <Menu.Menu position='right'>
                   <Menu.Item>Voter</Menu.Item>
                 </Menu.Menu>
@@ -185,6 +189,7 @@ class App extends Component {
                   />
                 )}
               />
+              <Route path="/rsa_generator" exact component={RSAGenerator} />
               <Route path="/test" exact component={Test} />
             </Container>
           </div>
