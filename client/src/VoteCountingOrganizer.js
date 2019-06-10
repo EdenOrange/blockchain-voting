@@ -57,8 +57,7 @@ function EndVotingInfo(props) {
 }
 
 function StartTally(props) {
-  const {endVotingTime, startTallyCallback, status} = props;
-  const currentBlockTimestamp = getCurrentBlockTimestamp();
+  const {endVotingTime, startTallyCallback, status, currentBlockTimestamp} = props;
 
   if (status !== '2' || !endVotingTime) {
     return (
@@ -103,12 +102,6 @@ function Tally(props) {
   );
 }
 
-function getCurrentBlockTimestamp() {
-  // Get most recent block timestamp
-  // return web3.eth.getBlock(web3.eth.blockNumber).timestamp * 1000; // JS timestamp is in milliseconds
-  return Date.now();
-}
-
 class VoteCountingOrganizer extends Component {
   constructor(props) {
     super(props);
@@ -121,7 +114,8 @@ class VoteCountingOrganizer extends Component {
       dataKeyCandidateIds: null,
       dataKeyCandidateCount: null,
       stackIdEndVoting: null,
-      stackIdTally: null
+      stackIdTally: null,
+      currentBlockTimestamp: 0
     }
   }
 
@@ -142,7 +136,7 @@ class VoteCountingOrganizer extends Component {
     });
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
     const {VotingContract} = this.props.drizzleState.contracts;
@@ -182,6 +176,11 @@ class VoteCountingOrganizer extends Component {
       }
 
       this.setState({ candidates: candidates });
+    }
+
+    // Get most recent block timestamp
+    if (this.state.currentBlockTimestamp === 0 || this.state.currentBlockTimestamp !== prevState.currentBlockTimestamp) {
+      drizzle.web3.eth.getBlock('latest').then((result) => this.setState({ currentBlockTimestamp: result.timestamp }));
     }
   }
 
@@ -225,6 +224,7 @@ class VoteCountingOrganizer extends Component {
           endVotingTime={endVotingTime ? endVotingTime.value : null}
           startTallyCallback={this.handleStartTally}
           status={status ? status.value : null}
+          currentBlockTimestamp={this.state.currentBlockTimestamp}
         />
         <TallyResult
           candidates={this.state.candidates ? this.state.candidates : []}
