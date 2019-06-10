@@ -1,19 +1,20 @@
 import React, { Component } from "react";
 import { Divider, Dropdown, Header, List } from 'semantic-ui-react';
+import TallyResult from './TallyResult';
 
 const Status = {
-  0: 'Preparation',
-  1: 'Registration',
-  2: 'Voting',
-  3: 'Tallying',
-  4: 'Finished'
+  '0': 'Preparation',
+  '1': 'Registration',
+  '2': 'Voting',
+  '3': 'Tallying',
+  '4': 'Finished'
 }
 
 function VotingContractInfo(props) {
+  const {status} = props;
   return (
     <div>
-      <VotingContractStatus status={props.votingStatus} />
-      { props.votingStatus === 4 && <VotingResult result={props.votingContract.result} /> }
+      <VotingContractStatus status={status} />
     </div>
   );
 }
@@ -22,24 +23,23 @@ function VotingContractStatus(props) {
   return (
     <div>
       <Header as='h1'>
-        Voting contract status : {props.status && Status[props.status.value]}
-      </Header>
-    </div>
-  )
-}
-
-function VotingResult(props) {
-  return (
-    <div>
-      <Header as='h2'>
-        Voting result : {props.result}
+        Voting contract status : {props.status && Status[props.status]}
       </Header>
     </div>
   )
 }
 
 function CandidatesList(props) {
-  const {candidates} = props;
+  const {candidates, status} = props;
+
+  if (status && status === '4') {
+    return (
+      <TallyResult
+        candidates={candidates}
+        status={status}
+      /> 
+    );
+  }
 
   const Candidates = candidates.map((candidate, index) => CandidateInfo(candidate, index));
 
@@ -209,9 +209,14 @@ class Home extends Component {
 
     return (
       <div>
-        <VotingContractInfo votingContract={this.state.votingContract} votingStatus={status} />
+        <VotingContractInfo
+          status={status ? status.value : null}
+        />
         <Divider />
-        <CandidatesList candidates={this.state.candidates ? this.state.candidates : []} />
+        <CandidatesList
+          status={status ? status.value : null}
+          candidates={this.state.candidates ? this.state.candidates : []}
+        />
         <Divider />
         <VotersList voters={this.state.voters ? this.state.voters : []} />
       </div>
