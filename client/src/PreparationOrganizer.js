@@ -61,9 +61,15 @@ function AddCandidate(props) {
 }
 
 function EndPreparationPhase(props) {
+  const {status} = props;
+
   return (
     <div>
-      <Button primary onClick={() => props.onClick()}>
+      <Button
+        primary
+        onClick={() => props.onClick()}
+        disabled={status !== '0'}
+      >
         End Preparation Phase
       </Button>
     </div>
@@ -74,10 +80,20 @@ class PreparationOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      dataKeyStatus: null,
       stackIdAddCandidate: null,
       stackIdAddOrganizer: null,
       stackIdEndPreparation: null
     }
+  }
+
+  componentDidMount() {
+    const {drizzle} = this.props;
+    const contract = drizzle.contracts.VotingContract;
+    const dataKeyStatus = contract.methods.state.cacheCall();
+    this.setState({
+      dataKeyStatus
+    });
   }
 
   handleAddOrganizer(address, name, N, E) {
@@ -116,6 +132,9 @@ class PreparationOrganizer extends Component {
   }
 
   render() {
+    const {VotingContract} = this.props.drizzleState.contracts;
+    const status = VotingContract.state[this.state.dataKeyStatus];
+
     return (
       <div>
         <AddOrganizer onClick={(address, name, N, E) => this.handleAddOrganizer(address, name, N, E)} />
@@ -124,7 +143,7 @@ class PreparationOrganizer extends Component {
         <AddCandidate onClick={(candidateName) => this.handleAddCandidate(candidateName)} />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddCandidate} />
         <Divider />
-        <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} />
+        <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} status={status ? status.value : null} />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndPreparation} />
       </div>
     );

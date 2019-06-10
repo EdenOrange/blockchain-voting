@@ -117,9 +117,15 @@ class VoterRegistrationRequest extends Component {
 }
 
 function EndRegistrationPhase(props) {
+  const {status} = props;
+
   return (
     <div>
-      <Button primary onClick={() => props.onClick()}>
+      <Button
+        primary
+        onClick={() => props.onClick()}
+        disabled={status !== '1'}
+      >
         End Registration Phase
       </Button>
     </div>
@@ -130,6 +136,7 @@ class RegistrationOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      dataKeyStatus: null,
       dataKeyRegisterRequests: null,
       dataKeyRegisters: null,
       dataKeyRegisterCount: null,
@@ -143,8 +150,10 @@ class RegistrationOrganizer extends Component {
   componentDidMount() {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
+    const dataKeyStatus = contract.methods.state.cacheCall();
     const dataKeyRegisterCount = contract.methods.registerCount.cacheCall();
     this.setState({
+      dataKeyStatus,
       dataKeyRegisterCount
     });
   }
@@ -227,12 +236,15 @@ class RegistrationOrganizer extends Component {
   }
 
   render() {
+    const {VotingContract} = this.props.drizzleState.contracts;
+    const status = VotingContract.state[this.state.dataKeyStatus];
+
     return (
       <div>
         <VoterRegistrationRequests requests={this.state.registerRequests ? this.state.registerRequests : []} handleRegisterVoter={this.handleRegisterVoter}/>
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterVoter} />
         <Divider />
-        <EndRegistrationPhase onClick={() => this.handleEndRegistrationPhase()} />
+        <EndRegistrationPhase onClick={() => this.handleEndRegistrationPhase()} status={status ? status.value : null} />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndRegistration} />
       </div>
     );
