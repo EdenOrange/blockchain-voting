@@ -102,7 +102,7 @@ function Tally(props) {
   );
 }
 
-class VoteCountingOrganizer extends Component {
+class VoteTallyingOrganizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -240,4 +240,4 @@ class VoteCountingOrganizer extends Component {
   }
 }
 
-export default VoteCountingOrganizer;
+export default VoteTallyingOrganizer;

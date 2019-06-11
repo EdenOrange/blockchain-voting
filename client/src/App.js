@@ -9,7 +9,7 @@ import Home from './Home';
 import PreparationOrganizer from './PreparationOrganizer';
 import RegistrationOrganizer from './RegistrationOrganizer';
 import VotePreparationOrganizer from './VotePreparationOrganizer';
-import VoteCountingOrganizer from './VoteCountingOrganizer';
+import VoteTallyingOrganizer from './VoteTallyingOrganizer';
 import PreparationVoter from './PreparationVoter';
 import RegistrationVoter from './RegistrationVoter';
 import VotePreparationVoter from './VotePreparationVoter';
@@ -64,9 +64,9 @@ class App extends Component {
                 <Menu.Item as={Link} to='/organizer/preparation/'>Preparation</Menu.Item>
                 <Menu.Item as={Link} to='/organizer/registration/'>Registration</Menu.Item>
                 <Menu.Item as={Link} to='/organizer/vote_preparation/'>Vote Preparation</Menu.Item>
-                <Menu.Item as={Link} to='/organizer/vote_counting/'>Vote Counting</Menu.Item>
-                <Menu.Item as={Link} to='/rsa_generator/'>RSA Generator</Menu.Item>
+                <Menu.Item as={Link} to='/organizer/vote_tallying/'>Vote Tallying</Menu.Item>
                 <Menu.Menu position='right'>
+                  <Menu.Item as={Link} to='/rsa_generator/'>RSA Generator</Menu.Item>
                   <Menu.Item>Organizer</Menu.Item>
                 </Menu.Menu>
               </Container>
@@ -109,9 +109,9 @@ class App extends Component {
                   />
                 )}
               />
-              <Route path="/organizer/vote_counting/" exact
+              <Route path="/organizer/vote_tallying/" exact
                 render={(routeProps) => (
-                  <VoteCountingOrganizer
+                  <VoteTallyingOrganizer
                     {...routeProps}
                     drizzle={this.props.drizzle}
                     drizzleState={this.state.drizzleState}
@@ -136,8 +136,8 @@ class App extends Component {
                 <Menu.Item as={Link} to='/voter/registration/'>Registration</Menu.Item>
                 <Menu.Item as={Link} to='/voter/vote_preparation/'>Vote Preparation</Menu.Item>
                 <Menu.Item as={Link} to='/voter/vote_casting/'>Vote Casting</Menu.Item>
-                <Menu.Item as={Link} to='/rsa_generator/'>RSA Generator</Menu.Item>
                 <Menu.Menu position='right'>
+                  <Menu.Item as={Link} to='/rsa_generator/'>RSA Generator</Menu.Item>
                   <Menu.Item>Voter</Menu.Item>
                 </Menu.Menu>
               </Container>
