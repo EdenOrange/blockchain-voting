@@ -10,7 +10,6 @@ import PreparationOrganizer from './PreparationOrganizer';
 import RegistrationOrganizer from './RegistrationOrganizer';
 import VotePreparationOrganizer from './VotePreparationOrganizer';
 import VoteTallyingOrganizer from './VoteTallyingOrganizer';
-import PreparationVoter from './PreparationVoter';
 import RegistrationVoter from './RegistrationVoter';
 import VotePreparationVoter from './VotePreparationVoter';
 import VoteCastingVoter from './VoteCastingVoter';
@@ -21,7 +20,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOrganizer: true,
+      isOrganizer: false,
       loading: true,
       drizzleState: null
     }
@@ -132,7 +131,6 @@ class App extends Component {
             <Menu fixed='top' inverted>
               <Container>
                 <Menu.Item as={Link} to='/'>Home</Menu.Item>
-                <Menu.Item as={Link} to='/voter/preparation/'>Preparation</Menu.Item>
                 <Menu.Item as={Link} to='/voter/registration/'>Registration</Menu.Item>
                 <Menu.Item as={Link} to='/voter/vote_preparation/'>Vote Preparation</Menu.Item>
                 <Menu.Item as={Link} to='/voter/vote_casting/'>Vote Casting</Menu.Item>
@@ -147,15 +145,6 @@ class App extends Component {
             <Route path="/" exact
                 render={(routeProps) => (
                   <Home
-                    {...routeProps}
-                    drizzle={this.props.drizzle}
-                    drizzleState={this.state.drizzleState}
-                  />
-                )}
-              />
-              <Route path="/voter/preparation/" exact
-                render={(routeProps) => (
-                  <PreparationVoter
                     {...routeProps}
                     drizzle={this.props.drizzle}
                     drizzleState={this.state.drizzleState}
