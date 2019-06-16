@@ -319,7 +319,7 @@ contract VotingContract {
         uint256 E,
         bytes32 message
     )
-        public
+        private
         returns (bool result)
     {
         bytes32 originalMessage = bytes32(expmod(unblinded, E, N));
