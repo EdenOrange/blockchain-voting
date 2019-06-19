@@ -269,10 +269,9 @@ contract VotingContract {
 
             // Verify voteString with unblinded if its signed by signer
             address signer = votes[i].signer;
-            bytes32 message = keccak256(abi.encode(voteString));
             uint256 N = organizers[signer].N;
             uint256 E = organizers[signer].E;
-            if (verifyBlindSig(unblinded, N, E, message)) {
+            if (verifyBlindSig(unblinded, N, E, voteString)) {
                 uint8 candidateId = uint8(voteString[0]);
                 if (candidateId < candidateCount) {
                     candidates[candidateId].voteCount++;
@@ -336,14 +335,14 @@ contract VotingContract {
         uint256 unblinded,
         uint256 N,
         uint256 E,
-        bytes32 message
+        bytes32 voteString
     )
         private
         returns (bool result)
     {
-        bytes32 originalMessage = bytes32(expmod(unblinded, E, N));
-        bytes32 hashMessage = keccak256(abi.encode(message));
-        result = hashMessage == originalMessage;
+        bytes32 originalVoteString = bytes32(expmod(unblinded, E, N));
+        bytes32 hashVoteString = keccak256(abi.encode(voteString));
+        result = hashVoteString == originalVoteString;
     }
 
     function endTally() private {

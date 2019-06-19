@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Button, Form, Header, Modal, Radio, TextArea } from 'semantic-ui-react';
-import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
 import TxStatus from './TxStatus';
 
@@ -249,7 +248,7 @@ class VotePreparationVoter extends Component {
     const organizers = this.state.organizers;
     const randomOrganizer = organizers[Math.floor(Math.random() * organizers.length)];
     const {blinded, r} = BlindSignature.blind({
-      message: Utils.soliditySha3(voteString),
+      message: voteString,
       N: randomOrganizer.blindSigKey.N,
       E: randomOrganizer.blindSigKey.E
     })

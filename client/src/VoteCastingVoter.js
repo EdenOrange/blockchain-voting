@@ -1,6 +1,5 @@
 import React, { Component, useState } from "react";
 import { Button, Divider, Form, Header, Input, TextArea } from 'semantic-ui-react';
-import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
 import TxStatus from './TxStatus';
 const BigInteger = require('jsbn').BigInteger;
@@ -264,7 +263,7 @@ class VoteCastingVoter extends Component {
       unblinded: unblinded,
       N: organizerSigner.blindSigKey.N,
       E: organizerSigner.blindSigKey.E,
-      message: Utils.soliditySha3(voteString)
+      message: voteString
     });
     console.log(voter);
     console.log(unblinded.toString());
