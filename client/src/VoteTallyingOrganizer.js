@@ -12,7 +12,7 @@ import TallyResult from './TallyResult';
 // }
 
 function EndVotingInfo(props) {
-  const {endVotingTime, status, countedVotes, voteCount} = props;
+  const {endVotingTime, status, countedVotes, validVotes, voteCount} = props;
 
   if (status === '2') {
     return (
@@ -33,6 +33,8 @@ function EndVotingInfo(props) {
           Tallying in progress
         </Header>
         {countedVotes}/{voteCount}
+        <br />
+        Valid votes : {validVotes}
       </div>
     )
   }
@@ -58,6 +60,11 @@ function EndVotingInfo(props) {
 
 function StartTally(props) {
   const {endVotingTime, startTallyCallback, status, currentBlockTimestamp} = props;
+  const [decKey, setDecKey] = useState(-1);
+
+  const invalidNumber = (value) => {
+    return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
+  }
 
   if (status !== '2' || !endVotingTime) {
     return (
@@ -68,10 +75,15 @@ function StartTally(props) {
   return (
     <div>
       <Divider />
+      <Input
+        placeholder='Vote decryption key D...'
+        onChange={(e) => setDecKey(parseInt(e.target.value))}
+      />
+      <br />
       <Button
         primary
-        onClick={startTallyCallback}
-        disabled={currentBlockTimestamp < endVotingTime*1000}
+        onClick={() => startTallyCallback(decKey)}
+        disabled={currentBlockTimestamp < endVotingTime*1000 || invalidNumber(decKey)}
       >
         Start Tally
       </Button>
@@ -83,6 +95,10 @@ function Tally(props) {
   const {handleTally, votesLeft} = props;
   const [votesToTally, setVotesToTally] = useState(-1);
 
+  const invalidNumber = (value) => {
+    return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
+  }
+
   return (
     <div>
       <br />
@@ -93,7 +109,7 @@ function Tally(props) {
       <br />
       <Button
         primary
-        disabled={votesToTally === '' || votesToTally <= 0 || votesToTally > votesLeft || typeof(votesToTally) !== 'number' || isNaN(votesToTally)}
+        disabled={invalidNumber(votesToTally) || votesToTally > votesLeft}
         onClick={() => handleTally(votesToTally)}
       >
         Tally votes
@@ -110,6 +126,7 @@ class VoteTallyingOrganizer extends Component {
       dataKeyEndVotingTime: null,
       dataKeyVoteCount: null,
       dataKeyCountedVotes: null,
+      dataKeyValidVotes: null,
       dataKeyCandidates: null,
       dataKeyCandidateIds: null,
       dataKeyCandidateCount: null,
@@ -126,12 +143,14 @@ class VoteTallyingOrganizer extends Component {
     const dataKeyEndVotingTime = contract.methods.endVotingTime.cacheCall();
     const dataKeyVoteCount = contract.methods.voteCount.cacheCall();
     const dataKeyCountedVotes = contract.methods.countedVotes.cacheCall();
+    const dataKeyValidVotes = contract.methods.validVotes.cacheCall();
     const dataKeyCandidateCount = contract.methods.candidateCount.cacheCall();
     this.setState({
       dataKeyStatus,
       dataKeyEndVotingTime,
       dataKeyVoteCount,
       dataKeyCountedVotes,
+      dataKeyValidVotes,
       dataKeyCandidateCount
     });
   }
@@ -184,11 +203,12 @@ class VoteTallyingOrganizer extends Component {
     }
   }
 
-  handleStartTally = () => {
+  handleStartTally = (decKey) => {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
 
     const stackId = contract.methods.endVoting.cacheSend(
+      decKey,
       { from: drizzleState.accounts[0] }
     );
     this.setState({ stackIdEndVoting: stackId });
@@ -211,6 +231,7 @@ class VoteTallyingOrganizer extends Component {
     const endVotingTime = VotingContract.endVotingTime[this.state.dataKeyEndVotingTime];
     const voteCount = VotingContract.voteCount[this.state.dataKeyVoteCount];
     const countedVotes = VotingContract.countedVotes[this.state.dataKeyCountedVotes];
+    const validVotes = VotingContract.validVotes[this.state.dataKeyValidVotes];
 
     return (
       <div>
@@ -218,6 +239,7 @@ class VoteTallyingOrganizer extends Component {
           endVotingTime={endVotingTime ? endVotingTime.value : null}
           status={status ? status.value : null}
           countedVotes={countedVotes ? countedVotes.value : '-'}
+          validVotes={validVotes ? validVotes.value : '-'}
           voteCount={voteCount ? voteCount.value : '-'}
         />
         <StartTally
