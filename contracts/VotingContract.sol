@@ -63,15 +63,21 @@ contract VotingContract {
     uint256 public blindCount;
 
     struct Vote {
-        bytes32 voteString;
-        uint256 unblinded;
+        uint256 encryptedVoteString;
+        uint256 encryptedUnblinded;
         address signer;
         bool counted;
+        bool valid;
     }
     Vote[] public votes;
     uint256 public voteCount;
-    mapping(bytes32 => bool) public voteExists; // bytes32 voteString to bool
+    mapping(uint256 => bool) public voteExists; // uint256 encryptedVoteString to bool
     uint256 public countedVotes;
+    uint256 public validVotes;
+
+    uint256 pubKeyE; // Public key (E) used for encrypting vote
+    uint256 pubKeyN; // Public key (N) used for encrypting vote
+    uint256 decKey; // Decryption key for tallying
 
     // Events
 
@@ -231,8 +237,8 @@ contract VotingContract {
     }
 
     function vote(
-        bytes32 voteString,
-        uint256 unblinded,
+        uint256 encryptedVoteString,
+        uint256 encryptedUnblinded,
         address signer
     )
         public
@@ -241,32 +247,42 @@ contract VotingContract {
         // Make sure voter is not using its registered account
         require(!voters[msg.sender].exists, "Vote sender is registered as voter");
         // Check if voteString has been used
-        require(!voteExists[voteString], "Vote string exists");
+        require(!voteExists[encryptedVoteString], "Encrypted vote string exists");
 
-        // Verify voteString with unblinded if its signed by signer
-        bytes32 message = keccak256(abi.encode(voteString));
-        uint256 N = organizers[signer].N;
-        uint256 E = organizers[signer].E;
-        require(verifyBlindSig(unblinded, N, E, message), "Blind signature is incorrect");
-
-        // Store the votes
-        addVote(voteString, unblinded, signer);
+        // Store the vote, vote might not be valid
+        votes.push(Vote(encryptedVoteString, encryptedUnblinded, signer, false, false));
+        voteCount++;
+        voteExists[encryptedVoteString] = true;
     }
 
     function tally(uint256 votesToTally) public onlyOrganizer {
         require(state == State.Tallying, "State is not tallying");
         require(countedVotes + votesToTally - 1 <= votes.length, "Attempting to tally more than uncounted votes");
+        require(decKey == 0, "No published decryption key yet");
 
         uint256 startIndex = countedVotes;
         uint256 endIndex = countedVotes + votesToTally - 1;
         for (uint256 i = startIndex; i <= endIndex; i++) {
-            // get votes[i]
-            uint8 candidateId = uint8(votes[i].voteString[0]);
-            // check candidateId from votes[i].voteString
-            candidates[candidateId].voteCount++;
-            // Mark vote as counted
+            // Get the vote and decrypt it
+            bytes32 voteString = bytes32(expmod(votes[i].encryptedVoteString, decKey, pubKeyN));
+            uint256 unblinded = expmod(votes[i].encryptedUnblinded, decKey, pubKeyN);
+
+            // Verify voteString with unblinded if its signed by signer
+            address signer = votes[i].signer;
+            bytes32 message = keccak256(abi.encode(voteString));
+            uint256 N = organizers[signer].N;
+            uint256 E = organizers[signer].E;
+            if (verifyBlindSig(unblinded, N, E, message)) {
+                uint8 candidateId = uint8(voteString[0]);
+                if (candidateId < candidateCount) {
+                    candidates[candidateId].voteCount++;
+                    // Mark vote as valid for informational purposes
+                    votes[i].valid = true;
+                    validVotes++;
+                }
+            }
+
             votes[i].counted = true;
-            // candidate[candidateId].voteCount++
             countedVotes++;
         }
 
@@ -281,16 +297,19 @@ contract VotingContract {
         state = State.Registration;
     }
 
-    function endRegistration() public onlyOrganizer {
+    function endRegistration(uint256 E, uint256 N) public onlyOrganizer {
         require(state == State.Registration, "State is not registration");
         require(block.timestamp >= endRegistrationTime, "Registration time has not ended yet");
         state = State.Voting;
+        pubKeyE = E;
+        pubKeyN = N;
     }
 
-    function endVoting() public onlyOrganizer {
+    function endVoting(uint256 D) public onlyOrganizer {
         require(state == State.Voting, "State is not voting");
         require(block.timestamp >= endVotingTime, "Voting time has not ended yet");
         state = State.Tallying;
+        decKey = D;
     }
     // internal
     // private
@@ -329,20 +348,6 @@ contract VotingContract {
 
     function endTally() private {
         state = State.Finished;
-    }
-
-    function addVote(
-        bytes32 voteString,
-        uint256 unblinded,
-        address signer
-    )
-        private
-    {
-        // Check if candidateId from voteString is correct
-        require(candidates[uint8(voteString[0])].exists, "Invalid candidate id");
-        votes.push(Vote(voteString, unblinded, signer, false));
-        voteCount++;
-        voteExists[voteString] = true;
     }
 
     // Source : https://medium.com/@rbkhmrcr/precompiles-solidity-e5d29bd428c4
