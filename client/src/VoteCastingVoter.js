@@ -3,6 +3,7 @@ import { Button, Divider, Form, Header, Input, TextArea } from 'semantic-ui-reac
 import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
 import TxStatus from './TxStatus';
+const BigInteger = require('jsbn').BigInteger;
 
 function BallotSignedInfo(props) {
   const {voters, voterAccount} = props;
@@ -101,6 +102,8 @@ class VoteCastingVoter extends Component {
       dataKeyOrganizers: null,
       dataKeyOrganizerAddresses: null,
       dataKeyOrganizerCount: null,
+      dataKeyPubKeyE: null,
+      dataKeyPubKeyN: null,
       voters: null,
       organizers: null,
       stackIdVote: null
@@ -112,9 +115,13 @@ class VoteCastingVoter extends Component {
     const contract = drizzle.contracts.VotingContract;
     const dataKeyVoterCount = contract.methods.voterCount.cacheCall();
     const dataKeyOrganizerCount = contract.methods.organizerCount.cacheCall();
+    const dataKeyPubKeyE = contract.methods.pubKeyE.cacheCall();
+    const dataKeyPubKeyN = contract.methods.pubKeyN.cacheCall();
     this.setState({
       dataKeyVoterCount,
-      dataKeyOrganizerCount
+      dataKeyOrganizerCount,
+      dataKeyPubKeyE,
+      dataKeyPubKeyN
     });
   }
 
@@ -265,7 +272,22 @@ class VoteCastingVoter extends Component {
     console.log("Is Signature Correct : " + isSignatureCorrect);
 
     if (isSignatureCorrect) {
-      this.sendVote(voteString, unblinded.toString(), voter.organizerAddress);
+      // Get encryption key
+      const {VotingContract} = this.props.drizzleState.contracts;
+      const pubKeyE = VotingContract.pubKeyE[this.state.dataKeyPubKeyE];
+      const pubKeyN = VotingContract.pubKeyN[this.state.dataKeyPubKeyN];
+      // Encrypt using given encryption key
+      const bigIntVoteString = new BigInteger(voteString.toString());
+      const bigIntUnblinded = new BigInteger(unblinded.toString());
+      const E = new BigInteger(pubKeyE.toString());
+      const N = new BigInteger(pubKeyN.toString());
+      const encryptedVoteString = bigIntVoteString.modPow(E, N);
+      const encryptedUnblinded = bigIntUnblinded.modPow(E, N);
+      console.log("Encryption key : ", E.toString(), N.toString());
+      console.log("Encrypted vote string : ", encryptedVoteString.toString());
+      console.log("Encrypted unblinded : ", encryptedUnblinded.toString());
+      // Send vote
+      this.sendVote(encryptedVoteString.toString(), encryptedUnblinded.toString(), voter.organizerAddress);
     }
     else {
       // Handle signature error
@@ -273,13 +295,13 @@ class VoteCastingVoter extends Component {
     }
   }
 
-  sendVote = (voteString, unblinded, signer) => {
+  sendVote = (encryptedVoteString, encryptedUnblinded, signer) => {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
 
     const stackId = contract.methods.vote.cacheSend(
-      voteString,
-      unblinded,
+      encryptedVoteString,
+      encryptedUnblinded,
       signer,
       { from: drizzleState.accounts[0] }
     );
