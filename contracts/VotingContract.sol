@@ -75,9 +75,9 @@ contract VotingContract {
     uint256 public countedVotes;
     uint256 public validVotes;
 
-    uint256 pubKeyE; // Public key (E) used for encrypting vote
-    uint256 pubKeyN; // Public key (N) used for encrypting vote
-    uint256 decKey; // Decryption key for tallying
+    uint256 public pubKeyE; // Public key (E) used for encrypting vote
+    uint256 public pubKeyN; // Public key (N) used for encrypting vote
+    uint256 public decKey; // Decryption key for tallying
 
     // Events
 
