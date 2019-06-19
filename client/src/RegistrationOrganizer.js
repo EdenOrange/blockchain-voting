@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import { Button, Divider, Header, Input, List, Modal } from 'semantic-ui-react';
 import * as Utils from 'web3-utils';
 import TxStatus from './TxStatus';
@@ -118,13 +118,29 @@ class VoterRegistrationRequest extends Component {
 
 function EndRegistrationPhase(props) {
   const {status} = props;
+  const [pubKeyE, setPubKeyE] = useState(-1);
+  const [pubKeyN, setPubKeyN] = useState(-1);
+
+  const invalidNumber = (value) => {
+    return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
+  }
 
   return (
     <div>
+      <Input
+        placeholder='Vote decryption key E...'
+        onChange={(e) => setPubKeyE(parseInt(e.target.value))}
+      />
+      <br />
+      <Input
+        placeholder='Vote decryption key N...'
+        onChange={(e) => setPubKeyN(parseInt(e.target.value))}
+      />
+      <br />
       <Button
         primary
         onClick={() => props.onClick()}
-        disabled={status !== '1'}
+        disabled={status !== '1' || invalidNumber(pubKeyE) || invalidNumber(pubKeyN)}
       >
         End Registration Phase
       </Button>
@@ -225,11 +241,13 @@ class RegistrationOrganizer extends Component {
     });
   }
 
-  handleEndRegistrationPhase() {
+  handleEndRegistrationPhase(pubKeyE, pubKeyN) {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
 
     const stackId = contract.methods.endRegistration.cacheSend(
+      pubKeyE,
+      pubKeyN,
       { from: drizzleState.accounts[0] }
     );
     this.setState({ stackIdEndRegistration: stackId });
