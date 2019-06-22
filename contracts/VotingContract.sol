@@ -258,7 +258,7 @@ contract VotingContract {
     function tally(uint256 votesToTally) public onlyOrganizer {
         require(state == State.Tallying, "State is not tallying");
         require(countedVotes + votesToTally - 1 <= votes.length, "Attempting to tally more than uncounted votes");
-        require(decKey == 0, "No published decryption key yet");
+        require(decKey != 0, "No published decryption key yet");
 
         uint256 startIndex = countedVotes;
         uint256 endIndex = countedVotes + votesToTally - 1;
