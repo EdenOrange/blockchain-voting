@@ -276,10 +276,12 @@ class VoteCastingVoter extends Component {
       const pubKeyE = VotingContract.pubKeyE[this.state.dataKeyPubKeyE];
       const pubKeyN = VotingContract.pubKeyN[this.state.dataKeyPubKeyN];
       // Encrypt using given encryption key
-      const bigIntVoteString = new BigInteger(voteString.toString());
+      const bigIntVoteString = new BigInteger(voteString.substring(2, voteString.length), 16);
       const bigIntUnblinded = new BigInteger(unblinded.toString());
-      const E = new BigInteger(pubKeyE.toString());
-      const N = new BigInteger(pubKeyN.toString());
+      console.log("vote string to big int", voteString.toString(), bigIntVoteString.toString());
+      console.log("unblinded to big int", unblinded.toString(), bigIntUnblinded.toString());
+      const E = new BigInteger(pubKeyE.value.toString());
+      const N = new BigInteger(pubKeyN.value.toString());
       const encryptedVoteString = bigIntVoteString.modPow(E, N);
       const encryptedUnblinded = bigIntUnblinded.modPow(E, N);
       console.log("Encryption key : ", E.toString(), N.toString());
@@ -298,6 +300,7 @@ class VoteCastingVoter extends Component {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
 
+    console.log("Sending", encryptedVoteString, encryptedUnblinded);
     const stackId = contract.methods.vote.cacheSend(
       encryptedVoteString,
       encryptedUnblinded,
