@@ -2,7 +2,7 @@ const VotingContract = artifacts.require("VotingContract");
 
 module.exports = function(deployer) {
   const name = "Organizer 0";
-  const N = "76371029918972468664941514738317813949700823831516674062130698696256739747471";
+  const N = "66655563862723763847474202717193239571546330570097639914700288437768035973357";
   const E = "65537";
   const endPreparationTimestamp = "1";
   const endRegistrationTimestamp = "2";

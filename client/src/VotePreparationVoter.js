@@ -268,6 +268,7 @@ class VotePreparationVoter extends Component {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
 
+    console.log("Sending", organizerAddress, blinded);
     const stackId = contract.methods.requestBlindSig.cacheSend(
       organizerAddress,
       blinded,
