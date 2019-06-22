@@ -1,6 +1,7 @@
 
 
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
+import { Button, Input } from 'semantic-ui-react';
 import { BigInteger } from 'jsbn'; 
 import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
@@ -55,18 +56,28 @@ function TestBlindSig(props) {
     N: Alice.N,
     E: Alice.E,
   }); // Alice blinds message
-  Alice.r = r;
+  // Alice.r = r;
+  Alice.r = r.toString();
   
   // Alice sends blinded to Bob
   Bob.blinded = blinded;
   
   const signed = BlindSignature.sign({
-    blinded: Bob.blinded,
-    key: Bob.key,
+    // blinded: Bob.blinded.toString(),
+    // key: Bob.key,
+    blinded: blinded.toString(),
+    key: {
+      keyPair: {
+        e: new BigInteger(Bob.key.keyPair.e.toString()),
+        n: new BigInteger(Bob.key.keyPair.n.toString()),
+        d: new BigInteger(Bob.key.keyPair.d.toString()) // privateKey.toString()
+      }
+    }
   }); // Bob signs blinded message
   
   // Bob sends signed to Alice
-  Alice.signed = signed;
+  // Alice.signed = signed;
+  Alice.signed = signed.toString();
   
   const unblinded = BlindSignature.unblind({
     signed: Alice.signed,
@@ -169,12 +180,103 @@ function TestBlindSig(props) {
   );
 }
 
+function BlindSig(props) {
+  const [voteString, setVoteString] = useState('');
+  const [blinded, setBlinded] = useState('');
+  const [N, setN] = useState('');
+  const [E, setE] = useState('');
+  const [D, setD] = useState('');
+  const [r, setR] = useState('');
+  const [signed, setSigned] = useState('');
+  const [unblinded, setUnblinded] = useState('');
+
+  const onClick = () => {
+    const { testBlinded, testR } = BlindSignature.testBlind({
+      message: voteString,
+      N: new BigInteger(N),
+      E: new BigInteger(E),
+      r: r
+    });
+    console.log(testBlinded.toString() === blinded, testBlinded.toString(), blinded);
+    console.log("r", testR.toString(), r);
+
+    const testSigned = BlindSignature.sign({
+      blinded: blinded,
+      key: {
+        keyPair: {
+          e: new BigInteger(E),
+          n: new BigInteger(N),
+          d: new BigInteger(D)
+        }
+      }
+    });
+    console.log(testSigned.toString() === signed, testSigned.toString(), signed);
+
+    const testUnblinded = BlindSignature.unblind({
+      signed: signed,
+      N: N,
+      r: r
+    });
+    console.log(testUnblinded.toString() === unblinded, testUnblinded.toString(), unblinded);
+
+    const testVerify = BlindSignature.verify({
+      unblinded: unblinded,
+      N: N,
+      E: E,
+      message: voteString
+    });
+    console.log(testVerify);
+  }
+
+  return (
+    <div>
+      <Input
+        placeholder='Vote string...'
+        onChange={(e) => setVoteString(e.target.value)}
+      />
+      <Input
+        placeholder='Blinded...'
+        onChange={(e) => setBlinded(e.target.value)}
+      />
+      <Input
+        placeholder='N...'
+        onChange={(e) => setN(e.target.value)}
+      />
+      <Input
+        placeholder='E...'
+        onChange={(e) => setE(e.target.value)}
+      />
+      <Input
+        placeholder='D...'
+        onChange={(e) => setD(e.target.value)}
+      />
+      <Input
+        placeholder='Random value...'
+        onChange={(e) => setR(e.target.value)}
+      />
+      <Input
+        placeholder='Signed...'
+        onChange={(e) => setSigned(e.target.value)}
+      />
+      <Input
+        placeholder='Unblinded...'
+        onChange={(e) => setUnblinded(e.target.value)}
+      />
+      <Button
+        primary
+        onClick={() => onClick()}
+      />
+    </div>
+  );
+}
+
 class Test extends Component {
   render() {
     return (
       <div>
         Testing page
-        <TestBlindSig />
+        {/* <TestBlindSig /> */}
+        <BlindSig />
       </div>
     );
   }

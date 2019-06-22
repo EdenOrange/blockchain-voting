@@ -50,9 +50,25 @@ function blind({ message, key, N, E }) {
     r.compareTo(bigOne) <= 0
   );
   const blinded = messageHash.multiply(r.modPow(E, N)).mod(N);
+  console.log("returning", blinded.toString(), r.toString());
   return {
     blinded,
     r,
+  };
+}
+
+function testBlind({ message, key, N, E, r }) {
+  const messageHash = messageToHashInt(message);
+  N = key ? key.keyPair.n : new BigInteger(N.toString());
+  E = key
+    ? new BigInteger(key.keyPair.e.toString())
+    : new BigInteger(E.toString());
+
+  const testR = new BigInteger(r.toString());
+  const testBlinded = messageHash.multiply(testR.modPow(E, N)).mod(N);
+  return {
+    testBlinded,
+    testR
   };
 }
 
@@ -81,6 +97,10 @@ function verify({ unblinded, key, message, E, N }) {
 
   const originalMsg = unblinded.modPow(E, N);
   const result = messageHash.equals(originalMsg);
+  console.log("VERIFY");
+  console.log("message", message);
+  console.log("messageHash", messageHash.toString());
+  console.log("originalMsg", originalMsg.toString());
   return result;
 }
 
@@ -96,7 +116,9 @@ function verify2({ unblinded, key, message }) {
 module.exports = {
   keyGeneration,
   messageToHash,
+  messageToHashInt,
   blind,
+  testBlind,
   sign,
   unblind,
   verify,
