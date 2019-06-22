@@ -118,8 +118,8 @@ class VoterRegistrationRequest extends Component {
 
 function EndRegistrationPhase(props) {
   const {status} = props;
-  const [pubKeyE, setPubKeyE] = useState(-1);
-  const [pubKeyN, setPubKeyN] = useState(-1);
+  const [pubKeyE, setPubKeyE] = useState('');
+  const [pubKeyN, setPubKeyN] = useState('');
 
   const invalidNumber = (value) => {
     return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
@@ -129,18 +129,18 @@ function EndRegistrationPhase(props) {
     <div>
       <Input
         placeholder='Vote decryption key E...'
-        onChange={(e) => setPubKeyE(parseInt(e.target.value))}
+        onChange={(e) => setPubKeyE(e.target.value)}
       />
       <br />
       <Input
         placeholder='Vote decryption key N...'
-        onChange={(e) => setPubKeyN(parseInt(e.target.value))}
+        onChange={(e) => setPubKeyN(e.target.value)}
       />
       <br />
       <Button
         primary
-        onClick={() => props.onClick()}
-        disabled={status !== '1' || invalidNumber(pubKeyE) || invalidNumber(pubKeyN)}
+        onClick={() => props.onClick(pubKeyE, pubKeyN)}
+        disabled={status !== '1' || invalidNumber(parseInt(pubKeyE)) || invalidNumber(parseInt(pubKeyN))}
       >
         End Registration Phase
       </Button>
@@ -262,7 +262,7 @@ class RegistrationOrganizer extends Component {
         <VoterRegistrationRequests requests={this.state.registerRequests ? this.state.registerRequests : []} handleRegisterVoter={this.handleRegisterVoter}/>
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterVoter} />
         <Divider />
-        <EndRegistrationPhase onClick={() => this.handleEndRegistrationPhase()} status={status ? status.value : null} />
+        <EndRegistrationPhase onClick={(pubKeyE, pubKeyN) => this.handleEndRegistrationPhase(pubKeyE, pubKeyN)} status={status ? status.value : null} />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndRegistration} />
       </div>
     );
