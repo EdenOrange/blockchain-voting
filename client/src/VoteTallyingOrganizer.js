@@ -60,7 +60,7 @@ function EndVotingInfo(props) {
 
 function StartTally(props) {
   const {endVotingTime, startTallyCallback, status, currentBlockTimestamp} = props;
-  const [decKey, setDecKey] = useState(-1);
+  const [decKey, setDecKey] = useState('');
 
   const invalidNumber = (value) => {
     return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
@@ -77,13 +77,13 @@ function StartTally(props) {
       <Divider />
       <Input
         placeholder='Vote decryption key D...'
-        onChange={(e) => setDecKey(parseInt(e.target.value))}
+        onChange={(e) => setDecKey(e.target.value)}
       />
       <br />
       <Button
         primary
         onClick={() => startTallyCallback(decKey)}
-        disabled={currentBlockTimestamp < endVotingTime*1000 || invalidNumber(decKey)}
+        disabled={currentBlockTimestamp < endVotingTime*1000 || invalidNumber(parseInt(decKey))}
       >
         Start Tally
       </Button>
