@@ -252,10 +252,11 @@ class VotePreparationVoter extends Component {
       N: randomOrganizer.blindSigKey.N,
       E: randomOrganizer.blindSigKey.E
     })
+    console.log("Chosen organizer pub keys : ", randomOrganizer.blindSigKey.N, randomOrganizer.blindSigKey.E);
     console.log("Blinded vote to be sent to organizer id " + randomOrganizer.id + " : " + blinded);
     console.log("Random r to be noted by voter : " + r);
     this.setState({
-      voteString: voteString.toString(),
+      voteString: voteString,
       randomValue: r.toString(),
       modalOpen: true
     });

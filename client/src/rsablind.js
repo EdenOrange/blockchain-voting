@@ -21,8 +21,9 @@ function keyProperties(key) {
 }
 
 function messageToHash(message) {
-  const messageHash = Utils.soliditySha3(message);
-  return messageHash.substring(2, messageHash.length);
+  let messageHash = Utils.soliditySha3(message);
+  messageHash = messageHash.substring(2, messageHash.length);
+  return messageHash.substring(0, messageHash.length-2);
 }
 
 function messageToHashInt(message) {
@@ -50,7 +51,6 @@ function blind({ message, key, N, E }) {
     r.compareTo(bigOne) <= 0
   );
   const blinded = messageHash.multiply(r.modPow(E, N)).mod(N);
-  console.log("returning", blinded.toString(), r.toString());
   return {
     blinded,
     r,
@@ -97,10 +97,6 @@ function verify({ unblinded, key, message, E, N }) {
 
   const originalMsg = unblinded.modPow(E, N);
   const result = messageHash.equals(originalMsg);
-  console.log("VERIFY");
-  console.log("message", message);
-  console.log("messageHash", messageHash.toString());
-  console.log("originalMsg", originalMsg.toString());
   return result;
 }
 
@@ -115,6 +111,7 @@ function verify2({ unblinded, key, message }) {
 
 module.exports = {
   keyGeneration,
+  keyProperties,
   messageToHash,
   messageToHashInt,
   blind,

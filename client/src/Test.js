@@ -2,39 +2,35 @@
 
 import React, { Component, useState } from "react";
 import { Button, Input } from 'semantic-ui-react';
-import { BigInteger } from 'jsbn'; 
 import * as Utils from 'web3-utils';
 import * as BlindSignature from './rsablind.js';
-
-function messageToHash(message) {
-  const messageHash = Utils.soliditySha3(message);
-  return messageHash.substring(2, messageHash.length);
-}
-
-function messageToHashInt(message) {
-  const messageHash = messageToHash(message);
-  console.log("messageToHashInt", messageHash.toString());
-  const messageBig = new BigInteger(messageHash, 16);
-  console.log("messageBig", messageBig.toString());
-  return messageBig;
-}
+import { BigInteger } from 'jsbn';
 
 function TestBlindSig(props) {
   
   const Bob = {
     key: BlindSignature.keyGeneration({ b: 256 }), // b: key-length
+    // key: {
+    //   keyPair: {
+    //     n: new BigInteger('66655563862723763847474202717193239571546330570097639914700288437768035973357'),
+    //     e: new BigInteger('65537'),
+    //     d: new BigInteger('30604583246001812379790747729726135952696077026829347973823241423072305883521')
+    //   }
+    // },
     blinded: null,
     unblinded: null,
     message: null,
   };
-
-  console.log(Bob.key.keyPair);
+  
   console.log('N: ', Bob.key.keyPair.n.toString());
   console.log('E: ', Bob.key.keyPair.e.toString());
   console.log('D: ', Bob.key.keyPair.d.toString());
   
+  const randomMessage = Utils.randomHex(32);
+
   const Alice = {
-    message: 'Hello Chaum!',
+    // message: '0x0038a785f2264892310aefbf35d7fffb38f41fd1d3ef60c710b5371d52000539',
+    message: randomMessage,
     N: null,
     E: null,
     r: null,
@@ -52,15 +48,15 @@ function TestBlindSig(props) {
   Alice.E = Bob.key.keyPair.e.toString();
   
   const { blinded, r } = BlindSignature.blind({
-    message: Alice.message,
-    N: Alice.N,
-    E: Alice.E,
+    message: Alice.message.toString(),
+    N: Alice.N.toString(),
+    E: Alice.E.toString(),
   }); // Alice blinds message
   // Alice.r = r;
   Alice.r = r.toString();
   
   // Alice sends blinded to Bob
-  Bob.blinded = blinded;
+  Bob.blinded = blinded.toString();
   
   const signed = BlindSignature.sign({
     // blinded: Bob.blinded.toString(),
@@ -80,41 +76,49 @@ function TestBlindSig(props) {
   Alice.signed = signed.toString();
   
   const unblinded = BlindSignature.unblind({
-    signed: Alice.signed,
-    N: Alice.N,
-    r: Alice.r,
+    signed: Alice.signed.toString(),
+    N: Alice.N.toString(),
+    r: Alice.r.toString(),
   }); // Alice unblinds
   Alice.unblinded = unblinded;
   
   // Alice verifies
   const result = BlindSignature.verify({
-    unblinded: Alice.unblinded,
-    N: Alice.N,
-    E: Alice.E,
+    unblinded: Alice.unblinded.toString(),
+    N: Alice.N.toString(),
+    E: Alice.E.toString(),
     message: Alice.message,
   });
   if (result) {
     console.log('Alice: Signatures verify!');
   } else {
-    console.log('Alice: Invalid signature');
+    console.log('Alice: Invalid signature', Alice.N.toString());
   }
   
   // Alice sends Bob unblinded signature and original message
-  Bob.unblinded = Alice.unblinded;
-  Bob.message = Alice.message;
+  Bob.unblinded = Alice.unblinded.toString();
+  Bob.message = Alice.message.toString();
   
   // Bob verifies
   const result2 = BlindSignature.verify2({
-    unblinded: Bob.unblinded,
-    key: Bob.key,
-    message: Bob.message,
+    unblinded: Bob.unblinded.toString(),
+    // key: Bob.key,
+    key: {
+      keyPair: {
+        e: new BigInteger(Bob.key.keyPair.e.toString()),
+        n: new BigInteger(Bob.key.keyPair.n.toString()),
+        d: new BigInteger(Bob.key.keyPair.d.toString()) // privateKey.toString()
+      }
+    },
+    // message: Bob.message.toString(),
+    message: Bob.message.toString(),
   });
   if (result2) {
     console.log('Bob: Signatures verify!');
   } else {
     console.log('Bob: Invalid signature');
   }
-
+/*
   const testUnblinded = "18431452880217904135031932785117497248237962884253514036659836759180181730598";
   const testE = new BigInteger("65537");
   const testN = new BigInteger("58697532336480146441198642100070341275175223310790866838056318326792138477057");
@@ -128,7 +132,7 @@ function TestBlindSig(props) {
   const messageHash = messageToHashInt(message);
   console.log("messageHash", messageHash.toString());
   console.log("originalMessage", originalMessage.toString());
-/*
+
   const N = "58697532336480146441198642100070341275175223310790866838056318326792138477057";
   const E = "65537";
   const D = "37675975330979047563902254887797106612462090157231312369036798725649986371681";
@@ -197,8 +201,6 @@ function BlindSig(props) {
       E: new BigInteger(E),
       r: r
     });
-    console.log(testBlinded.toString() === blinded, testBlinded.toString(), blinded);
-    console.log("r", testR.toString(), r);
 
     const testSigned = BlindSignature.sign({
       blinded: blinded,
@@ -210,14 +212,12 @@ function BlindSig(props) {
         }
       }
     });
-    console.log(testSigned.toString() === signed, testSigned.toString(), signed);
 
     const testUnblinded = BlindSignature.unblind({
       signed: signed,
       N: N,
       r: r
     });
-    console.log(testUnblinded.toString() === unblinded, testUnblinded.toString(), unblinded);
 
     const testVerify = BlindSignature.verify({
       unblinded: unblinded,
@@ -225,7 +225,49 @@ function BlindSig(props) {
       E: E,
       message: voteString
     });
+
+    console.log("Test 1 (Individual phases test)");
+    console.log(testBlinded.toString() === blinded.toString(), testBlinded.toString(), blinded.toString());
+    console.log("r", testR.toString(), r);
+    console.log(testSigned.toString() === signed.toString(), testSigned.toString(), signed.toString());
+    console.log(testUnblinded.toString() === unblinded.toString(), testUnblinded.toString(), unblinded.toString());
     console.log(testVerify);
+
+    const test2 = BlindSignature.testBlind({
+      message: voteString,
+      N: new BigInteger(N),
+      E: new BigInteger(E),
+      r: r
+    });
+    const test2Blinded = test2.testBlinded;
+    const test2R = test2.testR;
+    const test2Signed = BlindSignature.sign({
+      blinded: test2Blinded,
+      key: {
+        keyPair: {
+          e: new BigInteger(E),
+          n: new BigInteger(N),
+          d: new BigInteger(D)
+        }
+      }
+    });
+    const test2Unblinded = BlindSignature.unblind({
+      signed: test2Signed,
+      N: N,
+      r: test2R
+    });
+    const test2Verify = BlindSignature.verify({
+      unblinded: test2Unblinded,
+      N: N,
+      E: E,
+      message: voteString
+    });
+    console.log("Test 2 (No converting)");
+    console.log("Blinded", test2Blinded.toString());
+    console.log("Random value", test2R.toString());
+    console.log("Signed", test2Signed.toString());
+    console.log("Unblinded", test2Unblinded.toString());
+    console.log("Verify", test2Verify);
   }
 
   return (

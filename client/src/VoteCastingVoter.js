@@ -2,7 +2,7 @@ import React, { Component, useState } from "react";
 import { Button, Divider, Form, Header, Input, TextArea } from 'semantic-ui-react';
 import * as BlindSignature from './rsablind.js';
 import TxStatus from './TxStatus';
-const BigInteger = require('jsbn').BigInteger;
+import { BigInteger } from 'jsbn';
 
 function BallotSignedInfo(props) {
   const {voters, voterAccount} = props;
@@ -249,14 +249,13 @@ class VoteCastingVoter extends Component {
       N: organizerSigner.blindSigKey.N,
       r: randomValue
     });
-    console.log("Unblinded vote : " + unblinded);
     return unblinded;
   }
 
   handleCastVote = (voterAddress, voteString, randomValue) => {
     const voter = this.state.voters.find(voter => voter.address === voterAddress);
     const unblinded = this.getUnblindedVote(voter, randomValue);
-
+    console.log("Unblinded vote : " + unblinded);
     // Verify if signature is correct before casting vote
     const organizerSigner = this.state.organizers.find(organizer => organizer.address === voter.organizerAddress);
     const isSignatureCorrect = BlindSignature.verify({
@@ -267,7 +266,7 @@ class VoteCastingVoter extends Component {
     });
     console.log(voter);
     console.log(unblinded.toString());
-    console.log(organizerSigner);
+    console.log("organizer pubKeys", organizerSigner.blindSigKey.N, organizerSigner.blindSigKey.E);
     console.log("Is Signature Correct : " + isSignatureCorrect);
 
     if (isSignatureCorrect) {

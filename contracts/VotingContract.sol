@@ -340,8 +340,8 @@ contract VotingContract {
         private
         returns (bool result)
     {
-        bytes32 originalVoteString = bytes32(expmod(unblinded, E, N));
-        bytes32 hashVoteString = keccak256(abi.encode(voteString));
+        bytes31 originalVoteString = bytes31(bytes32(expmod(unblinded, E, N)) << 8);
+        bytes31 hashVoteString = bytes31(keccak256(abi.encode(voteString)));
         result = hashVoteString == originalVoteString;
     }
 

@@ -16,7 +16,7 @@ class TxStatus extends Component {
         <div></div>
       );
     }
-    console.log(transactions[txHash]);
+    // console.log(transactions[txHash]);
     return (
       <div>
         Transaction Status: {transactions[txHash].status}
