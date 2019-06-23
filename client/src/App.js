@@ -20,9 +20,12 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOrganizer: false,
+      isOrganizer: true,
       loading: true,
-      drizzleState: null
+      drizzleState: null,
+      dataKeyOrganizers: null,
+      dataKeyOrganizerAddresses: null,
+      dataKeyOrganizerCount: null
     }
   }
 
@@ -46,6 +49,64 @@ class App extends Component {
 
   componentWillUnmount() {
     this.unsubscribe();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.loading) {
+      return;
+    }
+
+    const {drizzle} = this.props;
+    const {drizzleState} = this.state.drizzleState;
+    const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = this.state.drizzleState.contracts;
+
+    if (this.state.dataKeyOrganizerCount === null) {
+      const dataKeyOrganizerCount = contract.methods.organizerCount.cacheCall();
+      this.setState({
+        dataKeyOrganizerCount
+      });
+    }
+
+    const organizerCount = VotingContract.organizerCount[this.state.dataKeyOrganizerCount];
+    let dataKeyOrganizerAddresses = [];
+    if (this.state.dataKeyOrganizerAddresses && parseInt(organizerCount.value) !== this.state.dataKeyOrganizerAddresses.length) {
+      // There is a change in organizerCount, reset dataKeys
+      this.setState({
+        dataKeyOrganizers: null,
+        dataKeyOrganizerAddresses: null,
+        organizers: null
+      })
+    }
+    else if (organizerCount && this.state.dataKeyOrganizerAddresses == null) {
+      for (let i = 0; i < organizerCount.value; i++) {
+        dataKeyOrganizerAddresses.push(contract.methods.organizerAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
+    }
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+      // Only do this if all dataKeyOrganizerAddresses are already loaded
+      let dataKeyOrganizers = [];
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        dataKeyOrganizers.push(contract.methods.organizers.cacheCall(organizerAddress.value));
+      }
+
+      this.setState({ dataKeyOrganizers: dataKeyOrganizers });
+    }
+    else if (this.state.dataKeyOrganizers && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]] && (prevState.drizzleState.accounts[0] !== this.state.drizzleState.accounts[0])) {
+      // Only do this if all dataKeyOrganizers are already loaded
+      let isOrganizer = false;
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+
+        if (organizer.args[0] === this.state.drizzleState.accounts[0]) {
+          isOrganizer = true;
+        }
+      }
+      this.setState({ isOrganizer: isOrganizer });
+    }
   }
 
   render() {
