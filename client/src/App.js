@@ -20,7 +20,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOrganizer: true,
+      isOrganizer: false,
+      initializePageTypeCheck: false,
       loading: true,
       drizzleState: null,
       dataKeyOrganizers: null,
@@ -101,7 +102,7 @@ class App extends Component {
 
       this.setState({ dataKeyOrganizers: dataKeyOrganizers });
     }
-    else if (this.state.dataKeyOrganizers && (prevState.drizzleState.accounts[0] !== this.state.drizzleState.accounts[0])) {
+    else if (this.state.dataKeyOrganizers && (prevState.drizzleState.accounts[0] !== this.state.drizzleState.accounts[0] || !this.state.initializePageTypeCheck)) {
       for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
         const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
         const organizer = VotingContract.organizers[dataKeyOrganizer];
@@ -121,7 +122,10 @@ class App extends Component {
           break;
         }
       }
-      this.setState({ isOrganizer: isOrganizer });
+      this.setState({
+        isOrganizer: isOrganizer,
+        initializePageTypeCheck: true
+      });
     }
   }
 
