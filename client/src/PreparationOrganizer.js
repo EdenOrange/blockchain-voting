@@ -61,14 +61,14 @@ function AddCandidate(props) {
 }
 
 function EndPreparationPhase(props) {
-  const {status} = props;
+  const {status, currentBlockTimestamp, endPreparationTime} = props;
 
   return (
     <div>
       <Button
         primary
         onClick={() => props.onClick()}
-        disabled={status !== '0'}
+        disabled={status !== '0' || currentBlockTimestamp < parseInt(endPreparationTime)}
       >
         End Preparation Phase
       </Button>
@@ -81,9 +81,11 @@ class PreparationOrganizer extends Component {
     super(props);
     this.state = {
       dataKeyStatus: null,
+      dataKeyEndPreparationTime: null,
       stackIdAddCandidate: null,
       stackIdAddOrganizer: null,
-      stackIdEndPreparation: null
+      stackIdEndPreparation: null,
+      currentBlockTimestamp: 0
     }
   }
 
@@ -91,9 +93,20 @@ class PreparationOrganizer extends Component {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
     const dataKeyStatus = contract.methods.state.cacheCall();
+    const dataKeyEndPreparationTime = contract.methods.endPreparationTime.cacheCall();
     this.setState({
-      dataKeyStatus
+      dataKeyStatus,
+      dataKeyEndPreparationTime
     });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const {drizzle} = this.props;
+
+    // Get most recent block timestamp
+    if (this.state.currentBlockTimestamp === 0 || this.state.currentBlockTimestamp !== prevState.currentBlockTimestamp) {
+      drizzle.web3.eth.getBlock('latest').then((result) => this.setState({ currentBlockTimestamp: result.timestamp }));
+    }
   }
 
   handleAddOrganizer(address, name, N, E) {
@@ -134,6 +147,7 @@ class PreparationOrganizer extends Component {
   render() {
     const {VotingContract} = this.props.drizzleState.contracts;
     const status = VotingContract.state[this.state.dataKeyStatus];
+    const endPreparationTime = VotingContract.state[this.state.dataKeyEndPreparationTime];
 
     return (
       <div>
@@ -143,7 +157,12 @@ class PreparationOrganizer extends Component {
         <AddCandidate onClick={(candidateName) => this.handleAddCandidate(candidateName)} />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdAddCandidate} />
         <Divider />
-        <EndPreparationPhase onClick={() => this.handleEndPreparationPhase()} status={status ? status.value : null} />
+        <EndPreparationPhase
+          onClick={() => this.handleEndPreparationPhase()}
+          status={status ? status.value : null}
+          currentBlockTimestamp={this.state.currentBlockTimestamp}
+          endPreparationTime={endPreparationTime ? endPreparationTime.value : null}
+        />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndPreparation} />
       </div>
     );

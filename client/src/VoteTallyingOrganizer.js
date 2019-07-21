@@ -83,7 +83,7 @@ function StartTally(props) {
       <Button
         primary
         onClick={() => startTallyCallback(decKey)}
-        disabled={currentBlockTimestamp < endVotingTime*1000 || invalidNumber(parseInt(decKey))}
+        disabled={currentBlockTimestamp < parseInt(endVotingTime) || invalidNumber(parseInt(decKey))}
       >
         Start Tally
       </Button>

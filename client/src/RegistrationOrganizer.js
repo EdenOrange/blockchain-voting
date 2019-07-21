@@ -117,7 +117,7 @@ class VoterRegistrationRequest extends Component {
 }
 
 function EndRegistrationPhase(props) {
-  const {status} = props;
+  const {status, currentBlockTimestamp, endRegistrationTime} = props;
   const [pubKeyE, setPubKeyE] = useState('');
   const [pubKeyN, setPubKeyN] = useState('');
 
@@ -140,7 +140,7 @@ function EndRegistrationPhase(props) {
       <Button
         primary
         onClick={() => props.onClick(pubKeyE, pubKeyN)}
-        disabled={status !== '1' || invalidNumber(parseInt(pubKeyE)) || invalidNumber(parseInt(pubKeyN))}
+        disabled={status !== '1' || currentBlockTimestamp < parseInt(endRegistrationTime) || invalidNumber(parseInt(pubKeyE)) || invalidNumber(parseInt(pubKeyN))}
       >
         End Registration Phase
       </Button>
@@ -153,12 +153,14 @@ class RegistrationOrganizer extends Component {
     super(props);
     this.state = {
       dataKeyStatus: null,
+      dataKeyEndRegistrationTime: null,
       dataKeyRegisterRequests: null,
       dataKeyRegisters: null,
       dataKeyRegisterCount: null,
       registerRequests: null,
       stackIdRegisterVoter: null,
-      stackIdEndRegistration: null
+      stackIdEndRegistration: null,
+      currentBlockTimestamp: 0
     }
     this.handleRegisterVoter = this.handleRegisterVoter.bind(this);
   }
@@ -167,9 +169,11 @@ class RegistrationOrganizer extends Component {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
     const dataKeyStatus = contract.methods.state.cacheCall();
+    const dataKeyEndRegistrationTime = contract.methods.endRegistrationTime.cacheCall();
     const dataKeyRegisterCount = contract.methods.registerCount.cacheCall();
     this.setState({
       dataKeyStatus,
+      dataKeyEndRegistrationTime,
       dataKeyRegisterCount
     });
   }
@@ -238,6 +242,11 @@ class RegistrationOrganizer extends Component {
 
       this.setState({ registerRequests: registerRequests });
     }
+
+    // Get most recent block timestamp
+    if (this.state.currentBlockTimestamp === 0 || this.state.currentBlockTimestamp !== prevState.currentBlockTimestamp) {
+      drizzle.web3.eth.getBlock('latest').then((result) => this.setState({ currentBlockTimestamp: result.timestamp }));
+    }
   }
 
   handleRegisterVoter(request) {
@@ -271,13 +280,19 @@ class RegistrationOrganizer extends Component {
   render() {
     const {VotingContract} = this.props.drizzleState.contracts;
     const status = VotingContract.state[this.state.dataKeyStatus];
+    const endRegistrationTime = VotingContract.endRegistrationTime[this.state.dataKeyEndRegistrationTime];
 
     return (
       <div>
         <VoterRegistrationRequests requests={this.state.registerRequests ? this.state.registerRequests : []} handleRegisterVoter={this.handleRegisterVoter}/>
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterVoter} />
         <Divider />
-        <EndRegistrationPhase onClick={(pubKeyE, pubKeyN) => this.handleEndRegistrationPhase(pubKeyE, pubKeyN)} status={status ? status.value : null} />
+        <EndRegistrationPhase
+          onClick={(pubKeyE, pubKeyN) => this.handleEndRegistrationPhase(pubKeyE, pubKeyN)}
+          status={status ? status.value : null}
+          currentBlockTimestamp={this.state.currentBlockTimestamp}
+          endRegistrationTime={endRegistrationTime ? endRegistrationTime.value : null}
+        />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdEndRegistration} />
       </div>
     );
