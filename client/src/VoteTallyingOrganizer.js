@@ -176,7 +176,14 @@ class VoteTallyingOrganizer extends Component {
       }
       this.setState({ dataKeyCandidateIds: dataKeyCandidateIds });
     }
-    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null && VotingContract.candidateIds[this.state.dataKeyCandidateIds[this.state.dataKeyCandidateIds.length-1]]) {
+    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null) {
+      for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
+        const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
+        if (!candidateId) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyCandidateIds are already loaded
       let dataKeyCandidates = [];
       for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
@@ -186,7 +193,14 @@ class VoteTallyingOrganizer extends Component {
 
       this.setState({ dataKeyCandidates: dataKeyCandidates });
     }
-    else if (this.state.dataKeyCandidates && this.state.candidates == null && VotingContract.candidates[this.state.dataKeyCandidates[this.state.dataKeyCandidates.length-1]]) {
+    else if (this.state.dataKeyCandidates && this.state.candidates == null) {
+      for (const dataKeyCandidate of this.state.dataKeyCandidates) {
+        const candidate = VotingContract.candidates[dataKeyCandidate];
+        if (!candidate) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyCandidates are already loaded
       let candidates = [];
       for (const dataKeyCandidate of this.state.dataKeyCandidates) {

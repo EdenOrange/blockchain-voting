@@ -145,7 +145,14 @@ class VoteCastingVoter extends Component {
       }
       this.setState({ dataKeyVoterAddresses: dataKeyVoterAddresses });
     }
-    else if (this.state.dataKeyVoterAddresses && this.state.dataKeyVoters == null && VotingContract.voterAddresses[this.state.dataKeyVoterAddresses[this.state.dataKeyVoterAddresses.length-1]]) {
+    else if (this.state.dataKeyVoterAddresses && this.state.dataKeyVoters == null) {
+      for (const dataKeyVoterAddress of this.state.dataKeyVoterAddresses) {
+        const voterAddress = VotingContract.voterAddresses[dataKeyVoterAddress];
+        if (!voterAddress) {
+          return;
+        }
+      }
+      
       // Only do this if all dataKeyVoterAddresses are already loaded
       let dataKeyVoters = [];
       for (const dataKeyVoterAddress of this.state.dataKeyVoterAddresses) {
@@ -155,7 +162,15 @@ class VoteCastingVoter extends Component {
 
       this.setState({ dataKeyVoters: dataKeyVoters });
     }
-    else if (this.state.dataKeyVoters && this.state.voters == null && VotingContract.voters[this.state.dataKeyVoters[this.state.dataKeyVoters.length-1]]) {
+    else if (this.state.dataKeyVoters && this.state.voters == null) {
+      for (let i = 0; i < this.state.dataKeyVoters.length; i++) {
+        const dataKeyVoter = this.state.dataKeyVoters[i];
+        const voter = VotingContract.voters[dataKeyVoter];
+        if (!voter) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyVoters are already loaded
       let voters = [];
       for (let i = 0; i < this.state.dataKeyVoters.length; i++) {
@@ -191,7 +206,14 @@ class VoteCastingVoter extends Component {
       }
       this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
     }
-    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null) {
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        if (!organizerAddress) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizerAddresses are already loaded
       let dataKeyOrganizers = [];
       for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
@@ -201,7 +223,15 @@ class VoteCastingVoter extends Component {
 
       this.setState({ dataKeyOrganizers: dataKeyOrganizers });
     }
-    else if (this.state.dataKeyOrganizers && this.state.organizers == null && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]]) {
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null) {
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        if (!organizer) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizers are already loaded
       let organizers = [];
       for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {

@@ -121,7 +121,14 @@ class VotePreparationOrganizer extends Component {
       }
       this.setState({ dataKeyBlinds: dataKeyBlinds });
     }
-    else if (this.state.dataKeyBlinds && this.state.dataKeyBlindSigRequests == null && VotingContract.blinds[this.state.dataKeyBlinds[this.state.dataKeyBlinds.length-1]]) {
+    else if (this.state.dataKeyBlinds && this.state.dataKeyBlindSigRequests == null) {
+      for (const dataKeyBlind of this.state.dataKeyBlinds) {
+        const blind = VotingContract.blinds[dataKeyBlind];
+        if (!blind) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyBlinds are already loaded
       let dataKeyBlindSigRequests = [];
       for (const dataKeyBlind of this.state.dataKeyBlinds) {
@@ -131,7 +138,15 @@ class VotePreparationOrganizer extends Component {
 
       this.setState({ dataKeyBlindSigRequests: dataKeyBlindSigRequests });
     }
-    else if (this.state.dataKeyBlindSigRequests && this.state.blindSigRequests == null && VotingContract.blindSigRequests[this.state.dataKeyBlindSigRequests[this.state.dataKeyBlindSigRequests.length-1]]) {
+    else if (this.state.dataKeyBlindSigRequests && this.state.blindSigRequests == null) {
+      for (let i = 0; i < this.state.dataKeyBlindSigRequests.length; i++) {
+        const dataKeyBlindSigRequest = this.state.dataKeyBlindSigRequests[i];
+        const blindSigRequest = VotingContract.blindSigRequests[dataKeyBlindSigRequest];
+        if (!blindSigRequest) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyBlindSigRequests are already loaded
       let blindSigRequests = [];
       for (let i = 0; i < this.state.dataKeyBlindSigRequests.length; i++) {
@@ -164,7 +179,14 @@ class VotePreparationOrganizer extends Component {
       }
       this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
     }
-    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null) {
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        if (!organizerAddress) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizerAddresses are already loaded
       let dataKeyOrganizers = [];
       for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
@@ -174,7 +196,15 @@ class VotePreparationOrganizer extends Component {
 
       this.setState({ dataKeyOrganizers: dataKeyOrganizers });
     }
-    else if (this.state.dataKeyOrganizers && this.state.organizers == null && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]]) {
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null) {
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        if (!organizer) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizers are already loaded
       let organizers = [];
       for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {

@@ -195,7 +195,14 @@ class RegistrationOrganizer extends Component {
       }
       this.setState({ dataKeyRegisters: dataKeyRegisters });
     }
-    else if (this.state.dataKeyRegisters && this.state.dataKeyRegisterRequests == null && VotingContract.registers[this.state.dataKeyRegisters[this.state.dataKeyRegisters.length-1]]) {
+    else if (this.state.dataKeyRegisters && this.state.dataKeyRegisterRequests == null) {
+      for (const dataKeyRegisterRequest of this.state.dataKeyRegisters) {
+        const registerRequest = VotingContract.registers[dataKeyRegisterRequest];
+        if (!registerRequest) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyRegisters are already loaded
       let dataKeyRegisterRequests = [];
       for (const dataKeyRegisterRequest of this.state.dataKeyRegisters) {
@@ -205,7 +212,15 @@ class RegistrationOrganizer extends Component {
 
       this.setState({ dataKeyRegisterRequests: dataKeyRegisterRequests });
     }
-    else if (this.state.dataKeyRegisterRequests && this.state.registerRequests == null && VotingContract.registerRequests[this.state.dataKeyRegisterRequests[this.state.dataKeyRegisterRequests.length-1]]) {
+    else if (this.state.dataKeyRegisterRequests && this.state.registerRequests == null) {
+      for (let i = 0; i < this.state.dataKeyRegisterRequests.length; i++) {
+        const dataKeyRegisterRequest = this.state.dataKeyRegisterRequests[i];
+        const registerRequest = VotingContract.registerRequests[dataKeyRegisterRequest];
+        if (!registerRequest) {
+          return;
+        }
+      }
+      
       // Only do this if all dataKeyRegisterRequests are already loaded
       let registerRequests = [];
       for (let i = 0; i < this.state.dataKeyRegisterRequests.length; i++) {

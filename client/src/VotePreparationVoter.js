@@ -165,7 +165,14 @@ class VotePreparationVoter extends Component {
       }
       this.setState({ dataKeyCandidateIds: dataKeyCandidateIds });
     }
-    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null && VotingContract.candidateIds[this.state.dataKeyCandidateIds[this.state.dataKeyCandidateIds.length-1]]) {
+    else if (this.state.dataKeyCandidateIds && this.state.dataKeyCandidates == null) {
+      for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
+        const candidateId = VotingContract.candidateIds[dataKeyCandidateId];
+        if (!candidateId) {
+          return;
+        }
+      }
+      
       // Only do this if all dataKeyCandidateIds are already loaded
       let dataKeyCandidates = [];
       for (const dataKeyCandidateId of this.state.dataKeyCandidateIds) {
@@ -202,7 +209,14 @@ class VotePreparationVoter extends Component {
       }
       this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
     }
-    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null) {
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        if (!organizerAddress) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizerAddresses are already loaded
       let dataKeyOrganizers = [];
       for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
@@ -212,7 +226,15 @@ class VotePreparationVoter extends Component {
 
       this.setState({ dataKeyOrganizers: dataKeyOrganizers });
     }
-    else if (this.state.dataKeyOrganizers && this.state.organizers == null && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]]) {
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null) {
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        if (!organizer) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizers are already loaded
       let organizers = [];
       for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {

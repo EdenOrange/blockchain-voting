@@ -84,7 +84,14 @@ class App extends Component {
       }
       this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
     }
-    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null && VotingContract.organizerAddresses[this.state.dataKeyOrganizerAddresses[this.state.dataKeyOrganizerAddresses.length-1]]) {
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null) {
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        if (!organizerAddress) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizerAddresses are already loaded
       let dataKeyOrganizers = [];
       for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
@@ -94,7 +101,15 @@ class App extends Component {
 
       this.setState({ dataKeyOrganizers: dataKeyOrganizers });
     }
-    else if (this.state.dataKeyOrganizers && VotingContract.organizers[this.state.dataKeyOrganizers[this.state.dataKeyOrganizers.length-1]] && (prevState.drizzleState.accounts[0] !== this.state.drizzleState.accounts[0])) {
+    else if (this.state.dataKeyOrganizers && (prevState.drizzleState.accounts[0] !== this.state.drizzleState.accounts[0])) {
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        if (!organizer) {
+          return;
+        }
+      }
+
       // Only do this if all dataKeyOrganizers are already loaded
       let isOrganizer = false;
       for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
@@ -103,6 +118,7 @@ class App extends Component {
 
         if (organizer.args[0] === this.state.drizzleState.accounts[0]) {
           isOrganizer = true;
+          break;
         }
       }
       this.setState({ isOrganizer: isOrganizer });
