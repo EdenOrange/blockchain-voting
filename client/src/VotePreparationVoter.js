@@ -80,7 +80,7 @@ function BallotCreatedModal(props) {
       closeOnDimmerClick={false}
     >
       <Modal.Header>
-        Vote has been sent
+        Blinded vote has been sent
       </Modal.Header>
       <Modal.Content>
         <Modal.Description>
