@@ -75,8 +75,8 @@ contract VotingContract {
     uint256 public countedVotes;
     uint256 public validVotes;
 
-    uint256 public pubKeyE; // Public key (E) used for encrypting vote
     uint256 public pubKeyN; // Public key (N) used for encrypting vote
+    uint256 public pubKeyE; // Public key (E) used for encrypting vote
     uint256 public decKey; // Decryption key for tallying
 
     // Events
@@ -296,12 +296,12 @@ contract VotingContract {
         state = State.Registration;
     }
 
-    function endRegistration(uint256 E, uint256 N) public onlyOrganizer {
+    function endRegistration(uint256 N, uint256 E) public onlyOrganizer {
         require(state == State.Registration, "State is not registration");
         require(block.timestamp >= endRegistrationTime, "Registration time has not ended yet");
         state = State.Voting;
-        pubKeyE = E;
         pubKeyN = N;
+        pubKeyE = E;
     }
 
     function endVoting(uint256 D) public onlyOrganizer {

@@ -118,8 +118,8 @@ class VoterRegistrationRequest extends Component {
 
 function EndRegistrationPhase(props) {
   const {status, currentBlockTimestamp, endRegistrationTime} = props;
-  const [pubKeyE, setPubKeyE] = useState('');
   const [pubKeyN, setPubKeyN] = useState('');
+  const [pubKeyE, setPubKeyE] = useState('');
 
   const invalidNumber = (value) => {
     return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
@@ -128,19 +128,19 @@ function EndRegistrationPhase(props) {
   return (
     <div>
       <Input
-        placeholder='Vote decryption key E...'
-        onChange={(e) => setPubKeyE(e.target.value)}
-      />
-      <br />
-      <Input
         placeholder='Vote decryption key N...'
         onChange={(e) => setPubKeyN(e.target.value)}
       />
       <br />
+      <Input
+        placeholder='Vote decryption key E...'
+        onChange={(e) => setPubKeyE(e.target.value)}
+      />
+      <br />
       <Button
         primary
-        onClick={() => props.onClick(pubKeyE, pubKeyN)}
-        disabled={status !== '1' || currentBlockTimestamp < parseInt(endRegistrationTime) || invalidNumber(parseInt(pubKeyE)) || invalidNumber(parseInt(pubKeyN))}
+        onClick={() => props.onClick(pubKeyN, pubKeyE)}
+        disabled={status !== '1' || currentBlockTimestamp < parseInt(endRegistrationTime) || invalidNumber(parseInt(pubKeyN)) || invalidNumber(parseInt(pubKeyE))}
       >
         End Registration Phase
       </Button>
@@ -265,13 +265,13 @@ class RegistrationOrganizer extends Component {
     });
   }
 
-  handleEndRegistrationPhase(pubKeyE, pubKeyN) {
+  handleEndRegistrationPhase(pubKeyN, pubKeyE) {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
 
     const stackId = contract.methods.endRegistration.cacheSend(
-      pubKeyE,
       pubKeyN,
+      pubKeyE,
       { from: drizzleState.accounts[0] }
     );
     this.setState({ stackIdEndRegistration: stackId });
@@ -288,7 +288,7 @@ class RegistrationOrganizer extends Component {
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdRegisterVoter} />
         <Divider />
         <EndRegistrationPhase
-          onClick={(pubKeyE, pubKeyN) => this.handleEndRegistrationPhase(pubKeyE, pubKeyN)}
+          onClick={(pubKeyN, pubKeyE) => this.handleEndRegistrationPhase(pubKeyN, pubKeyE)}
           status={status ? status.value : null}
           currentBlockTimestamp={this.state.currentBlockTimestamp}
           endRegistrationTime={endRegistrationTime ? endRegistrationTime.value : null}
