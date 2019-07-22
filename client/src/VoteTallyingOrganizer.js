@@ -44,6 +44,9 @@ function EndVotingInfo(props) {
         <Header>
           Voting has finished
         </Header>
+        {countedVotes}/{voteCount}
+        <br />
+        Valid votes : {validVotes}
       </div>
     );
   }
@@ -132,7 +135,8 @@ class VoteTallyingOrganizer extends Component {
       dataKeyCandidateCount: null,
       stackIdEndVoting: null,
       stackIdTally: null,
-      currentBlockTimestamp: 0
+      currentBlockTimestamp: 0,
+      validVotes: 0
     }
   }
 
@@ -160,11 +164,13 @@ class VoteTallyingOrganizer extends Component {
     const contract = drizzle.contracts.VotingContract;
     const {VotingContract} = this.props.drizzleState.contracts;
 
+    const validVotes = VotingContract.validVotes[this.state.dataKeyValidVotes];
     const candidateCount = VotingContract.candidateCount[this.state.dataKeyCandidateCount];
     let dataKeyCandidateIds = [];
-    if (this.state.dataKeyCandidateIds && parseInt(candidateCount.value) !== this.state.dataKeyCandidateIds.length) {
+    if ((this.state.dataKeyCandidateIds && parseInt(candidateCount.value) !== this.state.dataKeyCandidateIds.length) || validVotes !== this.state.validVotes) {
       // There is a change in candidateCount, reset dataKeys
       this.setState({
+        validVotes: validVotes,
         dataKeyCandidates: null,
         dataKeyCandidateIds: null,
         candidates: null
@@ -245,7 +251,7 @@ class VoteTallyingOrganizer extends Component {
     const endVotingTime = VotingContract.endVotingTime[this.state.dataKeyEndVotingTime];
     const voteCount = VotingContract.voteCount[this.state.dataKeyVoteCount];
     const countedVotes = VotingContract.countedVotes[this.state.dataKeyCountedVotes];
-    const validVotes = VotingContract.validVotes[this.state.dataKeyValidVotes];
+    const validVotes = this.state.validVotes;
 
     return (
       <div>
