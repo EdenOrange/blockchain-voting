@@ -88,6 +88,31 @@ function VotersList(props) {
   )
 }
 
+function OrganizersList(props) {
+  const {organizers} = props;
+  const organizersList = organizers.map((organizer) => ({
+    key: organizer.address,
+    value: organizer.address,
+    text: organizer.name
+  }));
+
+  return (
+    <div>
+      <Header>
+        Registered Organizers List
+      </Header>
+      <Dropdown
+        placeholder='Search organizer name'
+        fluid
+        search
+        clearable
+        selection
+        options={organizersList}
+      />
+    </div>
+  )
+}
+
 class Home extends Component {
   constructor(props) {
     super(props);
@@ -99,6 +124,9 @@ class Home extends Component {
       dataKeyVoters: null,
       dataKeyVoterAddresses: null,
       dataKeyVoterCount: null,
+      dataKeyOrganizers: null,
+      dataKeyOrganizerAddresses: null,
+      dataKeyOrganizerCount: null,
       candidates: null,
       voters: null
     }
@@ -117,7 +145,7 @@ class Home extends Component {
     });
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     const {drizzle} = this.props;
     const contract = drizzle.contracts.VotingContract;
     const {VotingContract} = this.props.drizzleState.contracts;
@@ -230,6 +258,74 @@ class Home extends Component {
 
       this.setState({ voters: voters });
     }
+
+    if (this.state.dataKeyOrganizerCount === null) {
+      const dataKeyOrganizerCount = contract.methods.organizerCount.cacheCall();
+      this.setState({
+        dataKeyOrganizerCount
+      });
+    }
+
+    const organizerCount = VotingContract.organizerCount[this.state.dataKeyOrganizerCount];
+    let dataKeyOrganizerAddresses = [];
+    if (this.state.dataKeyOrganizerAddresses && parseInt(organizerCount.value) !== this.state.dataKeyOrganizerAddresses.length) {
+      // There is a change in organizerCount, reset dataKeys
+      this.setState({
+        dataKeyOrganizers: null,
+        dataKeyOrganizerAddresses: null,
+        organizers: null
+      })
+    }
+    else if (organizerCount && this.state.dataKeyOrganizerAddresses == null) {
+      for (let i = 0; i < organizerCount.value; i++) {
+        dataKeyOrganizerAddresses.push(contract.methods.organizerAddresses.cacheCall(i));
+      }
+      this.setState({ dataKeyOrganizerAddresses: dataKeyOrganizerAddresses });
+    }
+    else if (this.state.dataKeyOrganizerAddresses && this.state.dataKeyOrganizers == null) {
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        if (!organizerAddress) {
+          return;
+        }
+      }
+
+      // Only do this if all dataKeyOrganizerAddresses are already loaded
+      let dataKeyOrganizers = [];
+      for (const dataKeyOrganizerAddress of this.state.dataKeyOrganizerAddresses) {
+        const organizerAddress = VotingContract.organizerAddresses[dataKeyOrganizerAddress];
+        dataKeyOrganizers.push(contract.methods.organizers.cacheCall(organizerAddress.value));
+      }
+
+      this.setState({ dataKeyOrganizers: dataKeyOrganizers });
+    }
+    else if (this.state.dataKeyOrganizers && this.state.organizers == null) {
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        if (!organizer) {
+          return;
+        }
+      }
+
+      // Only do this if all dataKeyOrganizers are already loaded
+      let organizers = [];
+      for (let i = 0; i < this.state.dataKeyOrganizers.length; i++) {
+        const dataKeyOrganizer = this.state.dataKeyOrganizers[i];
+        const organizer = VotingContract.organizers[dataKeyOrganizer];
+        // Create organizer object
+        organizers.push({
+          id: i,
+          address: organizer.args[0],
+          name: organizer.value.name,
+          blindSigKey: {
+            N: organizer.value.N,
+            E: organizer.value.E
+          }
+        });
+      }
+      this.setState({ organizers: organizers });
+    }
   }
 
   render() {
@@ -246,6 +342,8 @@ class Home extends Component {
           status={status ? status.value : null}
           candidates={this.state.candidates ? this.state.candidates : []}
         />
+        <Divider />
+        <OrganizersList organizers={this.state.organizers ? this.state.organizers : []} />
         <Divider />
         <VotersList voters={this.state.voters ? this.state.voters : []} />
       </div>
