@@ -44,7 +44,7 @@ function BallotSignedInfo(props) {
 }
 
 function CastVote(props) {
-  const {isAccountRegistered, handleCastVote, drizzleState} = props;
+  const {isAccountRegistered, isSignatureCorrect, handleCastVote, drizzleState} = props;
   const [voterAddress, setVoterAddress] = useState('');
   const [voteString, setVoteString] = useState('');
   const [randomValue, setRandomValue] = useState('');
@@ -72,13 +72,13 @@ function CastVote(props) {
         onChange={(e) => setVoteString(e.target.value)}
       />
       <br />
-      <Form>
-        <TextArea
-          placeholder='Random value...'
-          onChange={(e) => setRandomValue(e.target.value)}
-        />
-      </Form>
+      <Input
+        fluid
+        placeholder='Random value...'
+        onChange={(e) => setRandomValue(e.target.value)}
+      />
       <br />
+      {isSignatureCorrect ? "" : "Incorrect signature. Please contact the organizer"}
       <br />
       <Button
         primary
@@ -95,6 +95,7 @@ class VoteCastingVoter extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      isSignatureCorrect: true,
       dataKeyVoters: null,
       dataKeyVoterAddresses: null,
       dataKeyVoterCount: null,
@@ -300,6 +301,7 @@ class VoteCastingVoter extends Component {
     console.log("Is Signature Correct : " + isSignatureCorrect);
 
     if (isSignatureCorrect) {
+      this.setState({ isSignatureCorrect: true });
       // Get encryption key
       const {VotingContract} = this.props.drizzleState.contracts;
       const pubKeyE = VotingContract.pubKeyE[this.state.dataKeyPubKeyE];
@@ -321,6 +323,7 @@ class VoteCastingVoter extends Component {
     }
     else {
       // Handle signature error
+      this.setState({ isSignatureCorrect: false });
       console.log("Please contact the organizer");
     }
   }
@@ -345,7 +348,12 @@ class VoteCastingVoter extends Component {
     return (
       <div>
         <BallotSignedInfo voters={this.state.voters ? this.state.voters : []} voterAccount={this.getCurrentVoterAccount()} />
-        <CastVote isAccountRegistered={this.isAccountRegistered} handleCastVote={this.handleCastVote} drizzleState={this.props.drizzleState} />
+        <CastVote
+          isAccountRegistered={this.isAccountRegistered}
+          isSignatureCorrect={this.state.isSignatureCorrect}
+          handleCastVote={this.handleCastVote}
+          drizzleState={this.props.drizzleState}
+        />
         <TxStatus drizzleState={this.props.drizzleState} stackId={this.state.stackIdVote} />
       </div>
     );
