@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Form, Header, Modal, Radio, TextArea } from 'semantic-ui-react';
+import { Button, Form, Header, Modal, Radio } from 'semantic-ui-react';
 import * as BlindSignature from './rsablind.js';
 import TxStatus from './TxStatus';
 
@@ -80,7 +80,7 @@ function BallotCreatedModal(props) {
       closeOnDimmerClick={false}
     >
       <Modal.Header>
-        Blinded vote has been sent
+        Sending blinded vote
       </Modal.Header>
       <Modal.Content>
         <Modal.Description>
@@ -90,13 +90,15 @@ function BallotCreatedModal(props) {
           <Header>
             Vote string
           </Header>
-          {voteString}
+          <Modal.Content>
+            {voteString}
+          </Modal.Content>
           <Header>
             Random value
           </Header>
-          <Form>
-            <TextArea value={randomValue} />
-          </Form>
+          <Modal.Content>
+            {randomValue}
+          </Modal.Content>
         </Modal.Description>
       </Modal.Content>
       <Modal.Actions>
