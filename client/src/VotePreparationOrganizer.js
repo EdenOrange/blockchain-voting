@@ -45,9 +45,9 @@ function BlindSigRequest(request, signCallback) {
             <Header>
               Blinded vote
             </Header>
-            <Form>
-              <TextArea value={request.blinded} />
-            </Form>
+            <Modal.Content>
+              {request.blinded}
+            </Modal.Content>
           </Modal.Content>
           <Modal.Content>
             <Input
