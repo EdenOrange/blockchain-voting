@@ -79,10 +79,10 @@ function StartTally(props) {
     <div>
       <Divider />
       <Input
+        fluid
         placeholder='Vote decryption key D...'
         onChange={(e) => setDecKey(e.target.value)}
       />
-      <br />
       <Button
         primary
         onClick={() => startTallyCallback(decKey)}
@@ -106,10 +106,10 @@ function Tally(props) {
     <div>
       <br />
       <Input
+        fluid
         placeholder='Number of votes to tally...'
         onChange={(e) => setVotesToTally(parseInt(e.target.value))}
       />
-      <br />
       <Button
         primary
         disabled={invalidNumber(votesToTally) || votesToTally > votesLeft}
