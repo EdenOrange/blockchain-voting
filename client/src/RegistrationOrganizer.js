@@ -128,11 +128,13 @@ function EndRegistrationPhase(props) {
   return (
     <div>
       <Input
+        fluid
         placeholder='Vote decryption key N...'
         onChange={(e) => setPubKeyN(e.target.value)}
       />
       <br />
       <Input
+        fluid
         placeholder='Vote decryption key E...'
         onChange={(e) => setPubKeyE(e.target.value)}
       />
