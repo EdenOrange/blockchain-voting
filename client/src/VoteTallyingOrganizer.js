@@ -95,11 +95,17 @@ function StartTally(props) {
 }
 
 function Tally(props) {
-  const {handleTally, votesLeft} = props;
+  const {status, handleTally, votesLeft} = props;
   const [votesToTally, setVotesToTally] = useState(-1);
 
   const invalidNumber = (value) => {
     return value === '' || value <= 0 || typeof(value) !== 'number' || isNaN(value);
+  }
+
+  if (status !== '3') {
+    return (
+      <div></div>
+    );
   }
 
   return (
@@ -273,6 +279,7 @@ class VoteTallyingOrganizer extends Component {
           status={status ? status.value : null}
         />
         <Tally
+          status={status ? status.value : null}
           handleTally={this.handleTally}
           votesLeft={voteCount && countedVotes ? parseInt(voteCount.value) - parseInt(countedVotes.value) : -1}
         />
