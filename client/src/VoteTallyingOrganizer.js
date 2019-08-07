@@ -2,6 +2,7 @@ import React, { Component, useState } from "react";
 import { Button, Divider, Header, Input } from 'semantic-ui-react';
 import TxStatus from './TxStatus';
 import TallyResult from './TallyResult';
+import { BigInteger } from 'jsbn';
 
 // const Status = {
 //   0: 'Preparation',
@@ -139,6 +140,8 @@ class VoteTallyingOrganizer extends Component {
       dataKeyCandidates: null,
       dataKeyCandidateIds: null,
       dataKeyCandidateCount: null,
+      dataKeyPubKeyE: null,
+      dataKeyPubKeyN: null,
       stackIdEndVoting: null,
       stackIdTally: null,
       currentBlockTimestamp: 0,
@@ -155,13 +158,17 @@ class VoteTallyingOrganizer extends Component {
     const dataKeyCountedVotes = contract.methods.countedVotes.cacheCall();
     const dataKeyValidVotes = contract.methods.validVotes.cacheCall();
     const dataKeyCandidateCount = contract.methods.candidateCount.cacheCall();
+    const dataKeyPubKeyE = contract.methods.pubKeyE.cacheCall();
+    const dataKeyPubKeyN = contract.methods.pubKeyN.cacheCall();
     this.setState({
       dataKeyStatus,
       dataKeyEndVotingTime,
       dataKeyVoteCount,
       dataKeyCountedVotes,
       dataKeyValidVotes,
-      dataKeyCandidateCount
+      dataKeyCandidateCount,
+      dataKeyPubKeyE,
+      dataKeyPubKeyN
     });
   }
 
@@ -229,9 +236,29 @@ class VoteTallyingOrganizer extends Component {
     }
   }
 
+  checkPrivateKey = (pubKeyN, pubKeyE, priKeyD) => {
+    // Checks if private key is correct by encrypting and decrypting checkString
+    const checkString = "Check String";
+    const bigIntPubN = new BigInteger(pubKeyN.toString());
+    const bigIntPubE = new BigInteger(pubKeyE.toString());
+    const bigIntPriD = new BigInteger(priKeyD.toString());
+    const bigIntString = new BigInteger(checkString);
+    const encryptedString = bigIntString.modPow(bigIntPubE, bigIntPubN);
+    const decryptedString = encryptedString.modPow(bigIntPriD, bigIntPubN);
+    return bigIntString.toString() === decryptedString.toString();
+  }
+
   handleStartTally = (decKey) => {
     const {drizzle, drizzleState} = this.props;
     const contract = drizzle.contracts.VotingContract;
+    const {VotingContract} = drizzleState.contracts;
+
+    const pubKeyN = VotingContract.pubKeyN[this.state.dataKeyPubKeyN].value;
+    const pubKeyE = VotingContract.pubKeyE[this.state.dataKeyPubKeyE].value;
+    if (!this.checkPrivateKey(pubKeyN, pubKeyE, decKey)) {
+      console.log("Wrong private key");
+      return;
+    }
 
     const stackId = contract.methods.endVoting.cacheSend(
       decKey,

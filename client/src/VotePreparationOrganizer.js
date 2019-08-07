@@ -230,7 +230,25 @@ class VotePreparationOrganizer extends Component {
     return this.state.organizers.find(organizer => organizer.address === drizzleState.accounts[0]);
   }
 
+  checkPrivateKey = (pubKeyN, pubKeyE, priKeyD) => {
+    // Checks if private key is correct by encrypting and decrypting checkString
+    const checkString = "Check String";
+    const bigIntPubN = new BigInteger(pubKeyN.toString());
+    const bigIntPubE = new BigInteger(pubKeyE.toString());
+    const bigIntPriD = new BigInteger(priKeyD.toString());
+    const bigIntString = new BigInteger(checkString);
+    const encryptedString = bigIntString.modPow(bigIntPubE, bigIntPubN);
+    const decryptedString = encryptedString.modPow(bigIntPriD, bigIntPubN);
+    return bigIntString.toString() === decryptedString.toString();
+  }
+
   handleSign = (request, privateKey) => {
+    const pubKeyN = this.getCurrentOrganizerObject().blindSigKey.N;
+    const pubKeyE = this.getCurrentOrganizerObject().blindSigKey.E;
+    if (!this.checkPrivateKey(pubKeyN, pubKeyE, privateKey)) {
+      console.log("Wrong private key");
+      return;
+    }
     console.log("Sign ballot " + request.blinded + " with privateKey : " + privateKey);
     const key = {
       keyPair: {
