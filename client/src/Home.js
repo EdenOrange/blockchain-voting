@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import { Divider, Dropdown, Header, List } from 'semantic-ui-react';
 import TallyResult from './TallyResult';
 
@@ -70,6 +70,12 @@ function VotersList(props) {
     value: voter.address,
     text: voter.name
   }));
+  const [value, setValue] = useState(null);
+  const [currentVoter, setCurrentVoter] = useState();
+  let handleChange = (e, {value}) => {
+    setValue(value);
+    setCurrentVoter(voters.filter(voter => voter.address === value)[0]);
+  }
 
   return (
     <div>
@@ -83,9 +89,35 @@ function VotersList(props) {
         clearable
         selection
         options={votersList}
+        onChange={handleChange}
+        value={value}
       />
+      <div>
+        {currentVoter ? "Address : " + currentVoter.address : ""} <br />
+        {currentVoter ? "Name : " + currentVoter.name : ""} <br />
+        {currentVoter ? "Blinded : " + currentVoter.blinded : ""} <br />
+        {currentVoter ? "Signed : " + currentVoter.signed : ""} <br />
+        {currentVoter ? "Signer : " + currentVoter.signer : ""}
+      </div>
     </div>
   )
+}
+
+function VoterInfo(voterInfo) {
+  if (voterInfo) {
+    return (
+      <div>
+        Address : {voterInfo.address} <br />
+        Name : {voterInfo.name} <br />
+        Blinded : {voterInfo.blinded} <br />
+        Signed : {voterInfo.signed} <br />
+        Signer : {voterInfo.signer}
+      </div>
+    );
+  }
+  else {
+    return;
+  }
 }
 
 function OrganizersList(props) {
@@ -95,6 +127,12 @@ function OrganizersList(props) {
     value: organizer.address,
     text: organizer.name
   }));
+  const [value, setValue] = useState(null);
+  const [currentOrganizer, setCurrentOrganizer] = useState();
+  let handleChange = (e, {value}) => {
+    setValue(value);
+    setCurrentOrganizer(organizers.filter(organizer => organizer.address === value)[0]);
+  }
 
   return (
     <div>
@@ -108,9 +146,28 @@ function OrganizersList(props) {
         clearable
         selection
         options={organizersList}
+        onChange={handleChange}
+        value={value}
       />
+      {OrganizerInfo(currentOrganizer)}
     </div>
   )
+}
+
+function OrganizerInfo(organizerInfo) {
+  if (organizerInfo) {
+    return (
+      <div>
+        Address : {organizerInfo.address} <br />
+        Name : {organizerInfo.name} <br />
+        N : {organizerInfo.blindSigKey.N} <br />
+        E : {organizerInfo.blindSigKey.E}
+      </div>
+    );
+  }
+  else {
+    return;
+  }
 }
 
 class Home extends Component {
@@ -252,7 +309,10 @@ class Home extends Component {
         // Create voter object
         voters.push({
           address: voter.args[0],
-          name: voter.value.name
+          name: voter.value.name,
+          blinded: voter.value.blinded,
+          signed: voter.value.signed,
+          signer: voter.value.signer
         })
       }
 
